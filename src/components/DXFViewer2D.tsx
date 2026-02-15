@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import * as THREE from 'three';
-import { OrbitControls, Line2, LineGeometry, LineMaterial } from 'three-stdlib';
+import { evaluateBSplineCurve } from '@/lib/bspline';
+import { computeTotalDXFArea, getClosedShapeFromEntity } from '@/lib/dxf-area';
 import { validateDXF } from '@/lib/dxf-validation';
 import { createCustomGrid, createPackageBoundary } from '@/lib/three-grid';
-import { computeTotalDXFArea, getClosedShapeFromEntity } from '@/lib/dxf-area';
-import { evaluateBSplineCurve } from '@/lib/bspline';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import { Line2, LineGeometry, LineMaterial, OrbitControls } from 'three-stdlib';
 
 interface DXFViewer2DProps {
 	dxfUrl?: string;
@@ -42,7 +42,10 @@ export default function DXFViewer2D({
 	const [validationErrors, setValidationErrors] = useState<string[]>([]);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [entityCount, setEntityCount] = useState<number>(0);
-	const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+	const [dimensions, setDimensions] = useState<{
+		width: number;
+		height: number;
+	} | null>(null);
 	const [area, setArea] = useState<number | null>(null);
 
 	useEffect(() => {
@@ -69,7 +72,7 @@ export default function DXFViewer2D({
 				frustumSize / 2,
 				-frustumSize / 2,
 				0.1,
-				10000
+				10000,
 			);
 			camera.position.set(0, 0, 100);
 			cameraRef.current = camera;
@@ -184,7 +187,9 @@ export default function DXFViewer2D({
 				renderParsedDXF(parsedDxf)
 					.catch((err) => {
 						console.error('Error rendering parsed DXF:', err);
-						setError('Error rendering DXF: ' + (err as Error).message);
+						setError(
+							'Error rendering DXF: ' + (err as Error).message,
+						);
 					})
 					.finally(() => {
 						setIsLoading(false);
@@ -197,38 +202,47 @@ export default function DXFViewer2D({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [dxfUrl, parsedDxf, maxPackageWidth, maxPackageHeight]);
 
-	const fitCameraToObject = useCallback((object: THREE.Group, pieceBounds?: { width: number; height: number }) => {
-		if (!cameraRef.current || !controlsRef.current || !containerRef.current)
-			return;
+	const fitCameraToObject = useCallback(
+		(
+			object: THREE.Group,
+			pieceBounds?: { width: number; height: number },
+		) => {
+			if (
+				!cameraRef.current ||
+				!controlsRef.current ||
+				!containerRef.current
+			)
+				return;
 
-		const box = new THREE.Box3().setFromObject(object);
-		if (box.isEmpty()) return;
+			const box = new THREE.Box3().setFromObject(object);
+			if (box.isEmpty()) return;
 
-		const size = box.getSize(new THREE.Vector3());
+			const size = box.getSize(new THREE.Vector3());
 
-		// Store dimensions (DXF units are typically mm)
-		setDimensions({
-			width: Math.abs(size.x),
-			height: Math.abs(size.y),
-		});
+			// Store dimensions (DXF units are typically mm)
+			setDimensions({
+				width: Math.abs(size.x),
+				height: Math.abs(size.y),
+			});
 
-		const width = containerRef.current.clientWidth;
-		const height = containerRef.current.clientHeight || 600;
-		const aspect = width / height;
+			const width = containerRef.current.clientWidth;
+			const height = containerRef.current.clientHeight || 600;
+			const aspect = width / height;
 
-		// Zoom based on piece dimensions only (ignore package boundary)
-		const maxDim = Math.max(size.x, size.y / aspect);
-		const padding = 1.80;
-		const zoom = 200 / (maxDim * padding);
+			// Zoom based on piece dimensions only (ignore package boundary)
+			const maxDim = Math.max(size.x, size.y / aspect);
+			const padding = 1.8;
+			const zoom = 200 / (maxDim * padding);
 
-		cameraRef.current.zoom = Math.max(0.1, Math.min(zoom, 50));
-		cameraRef.current.position.set(0, 0, 100); // Target origin since piece is centered
-		cameraRef.current.updateProjectionMatrix();
+			cameraRef.current.zoom = Math.max(0.1, Math.min(zoom, 50));
+			cameraRef.current.position.set(0, 0, 100); // Target origin since piece is centered
+			cameraRef.current.updateProjectionMatrix();
 
-		controlsRef.current.target.set(0, 0, 0); // Target origin
-		controlsRef.current.update();
-	}, [maxPackageWidth, maxPackageHeight]);
-
+			controlsRef.current.target.set(0, 0, 0); // Target origin
+			controlsRef.current.update();
+		},
+		[maxPackageWidth, maxPackageHeight],
+	);
 
 	const loadDXFFromPath = async (path: string) => {
 		if (!sceneRef.current) return;
@@ -242,7 +256,9 @@ export default function DXFViewer2D({
 
 			const response = await fetch(path);
 			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+				throw new Error(
+					`HTTP ${response.status}: ${response.statusText}`,
+				);
 			}
 
 			const dxfString = await response.text();
@@ -319,116 +335,121 @@ export default function DXFViewer2D({
 	const renderDXFToScene = async (dxf: any) => {
 		if (!sceneRef.current) return;
 
-			// Dispose previous object and its resources
-			if (dxfObjectRef.current) {
-				disposeObject(dxfObjectRef.current);
-				sceneRef.current.remove(dxfObjectRef.current);
-			}
+		// Dispose previous object and its resources
+		if (dxfObjectRef.current) {
+			disposeObject(dxfObjectRef.current);
+			sceneRef.current.remove(dxfObjectRef.current);
+		}
 
-			const group = new THREE.Group();
-			let renderedCount = 0;
+		const group = new THREE.Group();
+		let renderedCount = 0;
 
-			// Parse entities
-			if (dxf.entities && Array.isArray(dxf.entities)) {
-				// Log closed entities analysis
-				let closedCount = 0;
-				const closedByType: Record<string, number> = {};
-				dxf.entities.forEach((entity: any) => {
-					const closed = getClosedShapeFromEntity(entity);
-					if (closed) {
-						closedCount++;
-						closedByType[entity.type] = (closedByType[entity.type] || 0) + 1;
-					}
-				});
-				console.log(`[DXF2D] Total entities: ${dxf.entities.length} | Closed entities: ${closedCount}`, closedByType);
-
-				dxf.entities.forEach((entity: any) => {
-					try {
-						const mesh = createEntityMesh(entity);
-						if (mesh) {
-							group.add(mesh);
-							renderedCount++;
-						}
-					} catch (err) {
-						console.warn('Error processing entity:', entity.type, err);
-					}
-				});
-			}
-
-			if (group.children.length === 0) {
-				throw new Error('No valid entities found in DXF file');
-			}
-
-			// Center the piece at the origin
-			const box = new THREE.Box3().setFromObject(group);
-			const center = box.getCenter(new THREE.Vector3());
-			group.position.set(-center.x, -center.y, -center.z);
-
-			// Get piece dimensions for grid
-			const size = box.getSize(new THREE.Vector3());
-			const pieceBounds = {
-				width: Math.abs(size.x),
-				height: Math.abs(size.y),
-			};
-
-			// Dispose previous grid and boundary
-			if (gridRef.current) {
-				disposeObject(gridRef.current);
-				sceneRef.current.remove(gridRef.current);
-				gridRef.current = null;
-			}
-			if (boundaryRef.current) {
-				boundaryRef.current.geometry?.dispose();
-				(boundaryRef.current.material as LineMaterial)?.dispose();
-				sceneRef.current.remove(boundaryRef.current);
-				boundaryRef.current = null;
-			}
-
-			// Create dynamic grid based on piece size
-			const customGrid = createCustomGrid({
-				pieceBounds,
-				cellSize: 10, // 10mm = 1cm
-				paddingMultiplier: 2.0,
-				minExtension: 300, // 30cm minimum
-			});
-			gridRef.current = customGrid;
-			sceneRef.current.add(customGrid);
-
-			// Create package boundary if dimensions are provided
-			// Auto-align: swap package dimensions so its longest side matches the piece's longest side
-			if (maxPackageWidth && maxPackageHeight) {
-				let pkgW = maxPackageWidth * 10; // Convert cm to mm
-				let pkgH = maxPackageHeight * 10;
-
-				const pieceIsWiderThanTall = pieceBounds.width >= pieceBounds.height;
-				const packageIsWiderThanTall = pkgW >= pkgH;
-
-				if (pieceIsWiderThanTall !== packageIsWiderThanTall) {
-					[pkgW, pkgH] = [pkgH, pkgW];
+		// Parse entities
+		if (dxf.entities && Array.isArray(dxf.entities)) {
+			// Log closed entities analysis
+			let closedCount = 0;
+			const closedByType: Record<string, number> = {};
+			dxf.entities.forEach((entity: any) => {
+				const closed = getClosedShapeFromEntity(entity);
+				if (closed) {
+					closedCount++;
+					closedByType[entity.type] =
+						(closedByType[entity.type] || 0) + 1;
 				}
+			});
+			console.log(
+				`[DXF2D] Total entities: ${dxf.entities.length} | Closed entities: ${closedCount}`,
+				closedByType,
+			);
 
-				const boundary = createPackageBoundary({
-					width: pkgW,
-					height: pkgH,
-					resolution: resolutionRef.current,
-				});
-				boundaryRef.current = boundary;
-				sceneRef.current.add(boundary);
+			dxf.entities.forEach((entity: any) => {
+				try {
+					const mesh = createEntityMesh(entity);
+					if (mesh) {
+						group.add(mesh);
+						renderedCount++;
+					}
+				} catch (err) {
+					console.warn('Error processing entity:', entity.type, err);
+				}
+			});
+		}
+
+		if (group.children.length === 0) {
+			throw new Error('No valid entities found in DXF file');
+		}
+
+		// Center the piece at the origin
+		const box = new THREE.Box3().setFromObject(group);
+		const center = box.getCenter(new THREE.Vector3());
+		group.position.set(-center.x, -center.y, -center.z);
+
+		// Get piece dimensions for grid
+		const size = box.getSize(new THREE.Vector3());
+		const pieceBounds = {
+			width: Math.abs(size.x),
+			height: Math.abs(size.y),
+		};
+
+		// Dispose previous grid and boundary
+		if (gridRef.current) {
+			disposeObject(gridRef.current);
+			sceneRef.current.remove(gridRef.current);
+			gridRef.current = null;
+		}
+		if (boundaryRef.current) {
+			boundaryRef.current.geometry?.dispose();
+			(boundaryRef.current.material as LineMaterial)?.dispose();
+			sceneRef.current.remove(boundaryRef.current);
+			boundaryRef.current = null;
+		}
+
+		// Create dynamic grid based on piece size
+		const customGrid = createCustomGrid({
+			pieceBounds,
+			cellSize: 10, // 10mm = 1cm
+			paddingMultiplier: 2.0,
+			minExtension: 300, // 30cm minimum
+		});
+		gridRef.current = customGrid;
+		sceneRef.current.add(customGrid);
+
+		// Create package boundary if dimensions are provided
+		// Auto-align: swap package dimensions so its longest side matches the piece's longest side
+		if (maxPackageWidth && maxPackageHeight) {
+			let pkgW = maxPackageWidth * 10; // Convert cm to mm
+			let pkgH = maxPackageHeight * 10;
+
+			const pieceIsWiderThanTall =
+				pieceBounds.width >= pieceBounds.height;
+			const packageIsWiderThanTall = pkgW >= pkgH;
+
+			if (pieceIsWiderThanTall !== packageIsWiderThanTall) {
+				[pkgW, pkgH] = [pkgH, pkgW];
 			}
 
-			dxfObjectRef.current = group;
-			sceneRef.current.add(group);
-			setEntityCount(renderedCount);
+			const boundary = createPackageBoundary({
+				width: pkgW,
+				height: pkgH,
+				resolution: resolutionRef.current,
+			});
+			boundaryRef.current = boundary;
+			sceneRef.current.add(boundary);
+		}
 
-			// Compute total area using contour chaining
-			if (dxf.entities) {
-				const totalArea = computeTotalDXFArea(dxf.entities, dxf.blocks);
-				setArea(totalArea > 0 ? totalArea : null);
-			}
+		dxfObjectRef.current = group;
+		sceneRef.current.add(group);
+		setEntityCount(renderedCount);
 
-			fitCameraToObject(group, pieceBounds);
+		// Compute total area using contour chaining
+		if (dxf.entities) {
+			const totalArea = computeTotalDXFArea(dxf.entities, dxf.blocks);
+			setArea(totalArea > 0 ? totalArea : null);
+		}
 
-			console.log('DXF rendered with', renderedCount, 'entities');
+		fitCameraToObject(group, pieceBounds);
+
+		console.log('DXF rendered with', renderedCount, 'entities');
 	};
 
 	// Properly dispose Three.js objects to prevent memory leaks
@@ -459,7 +480,10 @@ export default function DXFViewer2D({
 		});
 	};
 
-	const createLine2FromPoints = (points: THREE.Vector3[], color: number): Line2 => {
+	const createLine2FromPoints = (
+		points: THREE.Vector3[],
+		color: number,
+	): Line2 => {
 		const geometry = new LineGeometry();
 		const positions: number[] = [];
 		points.forEach((p) => {
@@ -487,12 +511,12 @@ export default function DXFViewer2D({
 					new THREE.Vector3(
 						entity.vertices[0].x,
 						entity.vertices[0].y,
-						entity.vertices[0].z || 0
+						entity.vertices[0].z || 0,
 					),
 					new THREE.Vector3(
 						entity.vertices[1].x,
 						entity.vertices[1].y,
-						entity.vertices[1].z || 0
+						entity.vertices[1].z || 0,
 					),
 				];
 				return createLine2FromPoints(points, color);
@@ -502,7 +526,7 @@ export default function DXFViewer2D({
 			case 'POLYLINE': {
 				if (!entity.vertices || entity.vertices.length < 2) return null;
 				const points = entity.vertices.map(
-					(v: any) => new THREE.Vector3(v.x, v.y, v.z || 0)
+					(v: any) => new THREE.Vector3(v.x, v.y, v.z || 0),
 				);
 				// Close the polyline if shape is closed
 				if (entity.shape) {
@@ -521,8 +545,8 @@ export default function DXFViewer2D({
 						new THREE.Vector3(
 							entity.center.x + entity.radius * Math.cos(theta),
 							entity.center.y + entity.radius * Math.sin(theta),
-							entity.center.z || 0
-						)
+							entity.center.z || 0,
+						),
 					);
 				}
 				return createLine2FromPoints(points, color);
@@ -545,7 +569,10 @@ export default function DXFViewer2D({
 				}
 
 				const points: THREE.Vector3[] = [];
-				const segments = Math.max(32, Math.ceil((sweep / Math.PI) * 32));
+				const segments = Math.max(
+					32,
+					Math.ceil((sweep / Math.PI) * 32),
+				);
 
 				for (let i = 0; i <= segments; i++) {
 					const t = i / segments;
@@ -554,8 +581,8 @@ export default function DXFViewer2D({
 						new THREE.Vector3(
 							cx + r * Math.cos(angle),
 							cy + r * Math.sin(angle),
-							cz
-						)
+							cz,
+						),
 					);
 				}
 				return createLine2FromPoints(points, color);
@@ -565,12 +592,12 @@ export default function DXFViewer2D({
 				if (!entity.center || !entity.majorAxisEndPoint) return null;
 				const majorRadius = Math.sqrt(
 					entity.majorAxisEndPoint.x ** 2 +
-						entity.majorAxisEndPoint.y ** 2
+						entity.majorAxisEndPoint.y ** 2,
 				);
 				const minorRadius = majorRadius * entity.axisRatio;
 				const rotation = Math.atan2(
 					entity.majorAxisEndPoint.y,
-					entity.majorAxisEndPoint.x
+					entity.majorAxisEndPoint.x,
 				);
 				const startAngle = entity.startAngle || 0;
 				const endAngle = entity.endAngle || Math.PI * 2;
@@ -583,11 +610,11 @@ export default function DXFViewer2D({
 					startAngle,
 					endAngle,
 					false,
-					rotation
+					rotation,
 				);
 				const curvePoints = curve.getPoints(64);
 				const points = curvePoints.map(
-					(p) => new THREE.Vector3(p.x, p.y, entity.center.z || 0)
+					(p) => new THREE.Vector3(p.x, p.y, entity.center.z || 0),
 				);
 				return createLine2FromPoints(points, color);
 			}
@@ -595,22 +622,42 @@ export default function DXFViewer2D({
 			case 'SPLINE': {
 				if (!entity.controlPoints || entity.controlPoints.length < 2)
 					return null;
-				if (entity.knotValues && entity.knotValues.length > 0 && entity.degreeOfSplineCurve) {
+				if (
+					entity.knotValues &&
+					entity.knotValues.length > 0 &&
+					entity.degreeOfSplineCurve
+				) {
 					// Proper B-spline evaluation using De Boor algorithm
-					const cp = entity.controlPoints.map((p: any) => ({ x: p.x, y: p.y, z: p.z || 0 }));
-					const evaluated = evaluateBSplineCurve(entity.degreeOfSplineCurve, cp, entity.knotValues);
-					const points = evaluated.map((p) => new THREE.Vector3(p.x, p.y, p.z));
+					const cp = entity.controlPoints.map((p: any) => ({
+						x: p.x,
+						y: p.y,
+						z: p.z || 0,
+					}));
+					const evaluated = evaluateBSplineCurve(
+						entity.degreeOfSplineCurve,
+						cp,
+						entity.knotValues,
+					);
+					const points = evaluated.map(
+						(p) => new THREE.Vector3(p.x, p.y, p.z),
+					);
 					return createLine2FromPoints(points, color);
 				}
 				if (entity.fitPoints && entity.fitPoints.length >= 2) {
 					// Fit points: CatmullRom is correct interpolation
-					const fitPts = entity.fitPoints.map((p: any) => new THREE.Vector3(p.x, p.y, p.z || 0));
+					const fitPts = entity.fitPoints.map(
+						(p: any) => new THREE.Vector3(p.x, p.y, p.z || 0),
+					);
 					const curve = new THREE.CatmullRomCurve3(fitPts);
-					const points = curve.getPoints(entity.fitPoints.length * 10);
+					const points = curve.getPoints(
+						entity.fitPoints.length * 10,
+					);
 					return createLine2FromPoints(points, color);
 				}
 				// Fallback: connect control points directly
-				const points = entity.controlPoints.map((p: any) => new THREE.Vector3(p.x, p.y, p.z || 0));
+				const points = entity.controlPoints.map(
+					(p: any) => new THREE.Vector3(p.x, p.y, p.z || 0),
+				);
 				return createLine2FromPoints(points, color);
 			}
 
@@ -624,8 +671,8 @@ export default function DXFViewer2D({
 							entity.position.y,
 							entity.position.z || 0,
 						],
-						3
-					)
+						3,
+					),
 				);
 				const pointMaterial = new THREE.PointsMaterial({
 					color: color,
@@ -660,7 +707,7 @@ export default function DXFViewer2D({
 	};
 
 	const handleFileSelect = async (
-		event: React.ChangeEvent<HTMLInputElement>
+		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		const file = event.target.files?.[0];
 		if (!file || !sceneRef.current) return;
