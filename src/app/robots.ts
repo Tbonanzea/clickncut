@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
 					'/my-orders/',
 					'/profile/',
 					'/checkout/',
-					'/quoting/success/',
+					'/quote-success/',
 					'/auth/password/',
 				],
 			},

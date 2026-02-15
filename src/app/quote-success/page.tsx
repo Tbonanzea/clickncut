@@ -20,13 +20,15 @@ function SuccessContent() {
 			return;
 		}
 
-		// Fetch order details
 		async function fetchOrder() {
 			try {
-				const response = await fetch(`/api/orders?orderId=${orderId}`);
+				const response = await fetch(`/api/orders`);
 				if (response.ok) {
 					const data = await response.json();
-					setOrderData(data);
+					const order = data.orders?.find((o: any) => o.id === orderId);
+					if (order) {
+						setOrderData(order);
+					}
 				}
 			} catch (error) {
 				console.error('Error fetching order:', error);
@@ -219,8 +221,10 @@ function SuccessContent() {
 
 export default function QuoteSuccessPage() {
 	return (
-		<Suspense fallback={<div className="text-center py-12">Loading...</div>}>
-			<SuccessContent />
-		</Suspense>
+		<div className="container py-8">
+			<Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+				<SuccessContent />
+			</Suspense>
+		</div>
 	);
 }

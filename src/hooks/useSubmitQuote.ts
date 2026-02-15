@@ -57,7 +57,7 @@ async function uploadFileToS3(file: File, fileName: string): Promise<string> {
  * Handles file upload to S3 and order creation
  */
 export function useSubmitQuote() {
-	const { cart, reset } = useQuoting();
+	const { cart } = useQuoting();
 	const router = useRouter();
 
 	return useMutation<SubmitQuoteResponse, Error, void>({
@@ -145,11 +145,8 @@ export function useSubmitQuote() {
 			};
 		},
 		onSuccess: (data) => {
-			// Reset cart on success
-			reset();
-
-			// Redirect to success page with order ID
-			router.push(`/quoting/success?orderId=${data.orderId}`);
+			// Navigate outside /quoting/* so QuotingProvider unmounts and cart resets automatically
+			router.replace(`/quote-success?orderId=${data.orderId}`);
 		},
 		onError: (error) => {
 			console.error('Error submitting quote:', error);
