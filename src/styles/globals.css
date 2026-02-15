@@ -59,131 +59,269 @@
 	--color-status-completed-foreground: var(--status-completed-foreground);
 }
 
+/* ============================================
+   Fallback colors (hex) for browsers that
+   don't support oklch() (e.g. Chrome < 111)
+   ============================================ */
+
 :root {
 	--radius: 0.625rem;
-	/* Backgrounds & Base - Industrial blue tint */
-	--background: oklch(0.98 0.002 240);
-	--foreground: oklch(0.25 0.015 250);
-	/* Success - Verde industrial */
-	--success: oklch(0.70 0.14 142);
-	--success-foreground: oklch(0.98 0.005 142);
-	/* Warning - Amarillo/Naranja de precaución */
-	--warning: oklch(0.75 0.14 60);
-	--warning-foreground: oklch(0.25 0.015 60);
-	/* Info - Azul informativo */
-	--info: oklch(0.60 0.10 240);
-	--info-foreground: oklch(0.98 0.005 240);
+	/* Backgrounds & Base */
+	--background: #f7f9fa;
+	--foreground: #1c2229;
+	/* Success */
+	--success: #68b460;
+	--success-foreground: #f7f9f6;
+	/* Warning */
+	--warning: #ee9748;
+	--warning-foreground: #27201a;
+	/* Info */
+	--info: #4188b6;
+	--info-foreground: #f6f9fb;
 	/* Status colors for orders */
-	--status-pending: oklch(0.75 0.14 60);
-	--status-pending-foreground: oklch(0.25 0.015 60);
-	--status-paid: oklch(0.60 0.10 240);
-	--status-paid-foreground: oklch(0.98 0.005 240);
-	--status-shipped: oklch(0.65 0.12 280);
-	--status-shipped-foreground: oklch(0.98 0.005 280);
-	--status-completed: oklch(0.70 0.14 142);
-	--status-completed-foreground: oklch(0.98 0.005 142);
+	--status-pending: #ee9748;
+	--status-pending-foreground: #27201a;
+	--status-paid: #4188b6;
+	--status-paid-foreground: #f6f9fb;
+	--status-shipped: #8186d7;
+	--status-shipped-foreground: #f8f8fc;
+	--status-completed: #68b460;
+	--status-completed-foreground: #f7f9f6;
 	/* Cards */
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.25 0.015 250);
+	--card: #ffffff;
+	--card-foreground: #1c2229;
 	/* Popovers */
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.25 0.015 250);
-	/* Primary - Azul metálico acero */
-	--primary: oklch(0.38 0.05 240);
-	--primary-foreground: oklch(0.98 0.005 240);
-	/* Secondary - Naranja industrial */
-	--secondary: oklch(0.62 0.15 35);
-	--secondary-foreground: oklch(0.98 0.005 35);
-	/* Accent - Naranja suave para highlights */
-	--accent: oklch(0.95 0.03 35);
-	--accent-foreground: oklch(0.38 0.05 240);
-	/* Muted - Grises metálicos */
-	--muted: oklch(0.95 0.008 240);
-	--muted-foreground: oklch(0.50 0.015 240);
+	--popover: #ffffff;
+	--popover-foreground: #1c2229;
+	/* Primary */
+	--primary: #28465a;
+	--primary-foreground: #f6f9fb;
+	/* Secondary */
+	--secondary: #d05f43;
+	--secondary-foreground: #fcf7f6;
+	/* Accent */
+	--accent: #ffe8e1;
+	--accent-foreground: #28465a;
+	/* Muted */
+	--muted: #eaeff3;
+	--muted-foreground: #5c656b;
 	/* Destructive */
-	--destructive: oklch(0.577 0.245 27.325);
+	--destructive: #e7000b;
 	/* Borders & Inputs */
-	--border: oklch(0.88 0.01 240);
-	--input: oklch(0.88 0.01 240);
-	--ring: oklch(0.62 0.15 35);
-	/* Charts - Industrial colors */
-	--chart-1: oklch(0.62 0.15 35);
-	--chart-2: oklch(0.55 0.08 240);
-	--chart-3: oklch(0.65 0.12 280);
-	--chart-4: oklch(0.70 0.10 60);
-	--chart-5: oklch(0.50 0.05 200);
+	--border: #d2d8dd;
+	--input: #d2d8dd;
+	--ring: #d05f43;
+	/* Charts */
+	--chart-1: #d05f43;
+	--chart-2: #42789c;
+	--chart-3: #8186d7;
+	--chart-4: #cc8f5c;
+	--chart-5: #3f6c6e;
 	/* Sidebar */
-	--sidebar: oklch(0.96 0.008 240);
-	--sidebar-foreground: oklch(0.25 0.015 250);
-	--sidebar-primary: oklch(0.62 0.15 35);
-	--sidebar-primary-foreground: oklch(0.98 0.005 35);
-	--sidebar-accent: oklch(0.92 0.015 240);
-	--sidebar-accent-foreground: oklch(0.25 0.015 250);
-	--sidebar-border: oklch(0.88 0.01 240);
-	--sidebar-ring: oklch(0.62 0.15 35);
+	--sidebar: #edf3f7;
+	--sidebar-foreground: #1c2229;
+	--sidebar-primary: #d05f43;
+	--sidebar-primary-foreground: #fcf7f6;
+	--sidebar-accent: #dce6ee;
+	--sidebar-accent-foreground: #1c2229;
+	--sidebar-border: #d2d8dd;
+	--sidebar-ring: #d05f43;
 }
 
 .dark {
-	/* Backgrounds - Dark metallic blue */
-	--background: oklch(0.18 0.015 240);
-	--foreground: oklch(0.95 0.008 240);
-	/* Success - Verde más brillante para dark mode */
-	--success: oklch(0.65 0.16 142);
-	--success-foreground: oklch(0.18 0.015 142);
-	/* Warning - Amarillo más brillante */
-	--warning: oklch(0.70 0.16 60);
-	--warning-foreground: oklch(0.18 0.015 60);
-	/* Info - Azul más brillante */
-	--info: oklch(0.65 0.12 240);
-	--info-foreground: oklch(0.18 0.015 240);
-	/* Status colors for orders - dark mode */
-	--status-pending: oklch(0.70 0.16 60);
-	--status-pending-foreground: oklch(0.18 0.015 60);
-	--status-paid: oklch(0.65 0.12 240);
-	--status-paid-foreground: oklch(0.18 0.015 240);
-	--status-shipped: oklch(0.70 0.14 280);
-	--status-shipped-foreground: oklch(0.18 0.015 280);
-	--status-completed: oklch(0.65 0.16 142);
-	--status-completed-foreground: oklch(0.18 0.015 142);
-	/* Cards - Slightly elevated */
-	--card: oklch(0.22 0.018 240);
-	--card-foreground: oklch(0.95 0.008 240);
+	/* Backgrounds */
+	--background: #0c1318;
+	--foreground: #eaeff3;
+	/* Success */
+	--success: #4da745;
+	--success-foreground: #0e130d;
+	/* Warning */
+	--warning: #e58212;
+	--warning-foreground: #17100b;
+	/* Info */
+	--info: #3d98d1;
+	--info-foreground: #0c1318;
+	/* Status colors for orders */
+	--status-pending: #e58212;
+	--status-pending-foreground: #17100b;
+	--status-paid: #3d98d1;
+	--status-paid-foreground: #0c1318;
+	--status-shipped: #8e93f3;
+	--status-shipped-foreground: #101118;
+	--status-completed: #4da745;
+	--status-completed-foreground: #0e130d;
+	/* Cards */
+	--card: #131c22;
+	--card-foreground: #eaeff3;
 	/* Popovers */
-	--popover: oklch(0.22 0.018 240);
-	--popover-foreground: oklch(0.95 0.008 240);
-	/* Primary - Naranja brillante (strategic inversion) */
-	--primary: oklch(0.68 0.16 35);
-	--primary-foreground: oklch(0.18 0.015 240);
-	/* Secondary - Azul metálico claro */
-	--secondary: oklch(0.50 0.05 240);
-	--secondary-foreground: oklch(0.95 0.008 240);
-	/* Accent - Naranja oscuro */
-	--accent: oklch(0.30 0.04 35);
-	--accent-foreground: oklch(0.68 0.16 35);
-	/* Muted - Grises metálicos */
-	--muted: oklch(0.28 0.02 240);
-	--muted-foreground: oklch(0.60 0.015 240);
+	--popover: #131c22;
+	--popover-foreground: #eaeff3;
+	/* Primary */
+	--primary: #e96e50;
+	--primary-foreground: #0c1318;
+	/* Secondary */
+	--secondary: #49677d;
+	--secondary-foreground: #eaeff3;
+	/* Accent */
+	--accent: #3f2620;
+	--accent-foreground: #e96e50;
+	/* Muted */
+	--muted: #202a32;
+	--muted-foreground: #788288;
 	/* Destructive */
-	--destructive: oklch(0.704 0.191 22.216);
-	/* Borders - Semi-transparent glass effect */
-	--border: oklch(0.40 0.02 240 / 25%);
-	--input: oklch(0.40 0.02 240 / 35%);
-	--ring: oklch(0.68 0.16 35);
-	/* Charts - Bright industrial colors */
-	--chart-1: oklch(0.68 0.16 35);
-	--chart-2: oklch(0.60 0.10 240);
-	--chart-3: oklch(0.70 0.14 280);
-	--chart-4: oklch(0.75 0.12 60);
-	--chart-5: oklch(0.55 0.08 200);
-	/* Sidebar Dark */
-	--sidebar: oklch(0.16 0.018 240);
-	--sidebar-foreground: oklch(0.95 0.008 240);
-	--sidebar-primary: oklch(0.68 0.16 35);
-	--sidebar-primary-foreground: oklch(0.16 0.018 240);
-	--sidebar-accent: oklch(0.24 0.025 240);
-	--sidebar-accent-foreground: oklch(0.95 0.008 240);
-	--sidebar-border: oklch(0.40 0.02 240 / 25%);
-	--sidebar-ring: oklch(0.68 0.16 35);
+	--destructive: #ff6467;
+	/* Borders - Semi-transparent */
+	--border: rgba(62, 73, 82, 0.25);
+	--input: rgba(62, 73, 82, 0.35);
+	--ring: #e96e50;
+	/* Charts */
+	--chart-1: #e96e50;
+	--chart-2: #4188b6;
+	--chart-3: #8e93f3;
+	--chart-4: #e59b5b;
+	--chart-5: #298084;
+	/* Sidebar */
+	--sidebar: #060e14;
+	--sidebar-foreground: #eaeff3;
+	--sidebar-primary: #e96e50;
+	--sidebar-primary-foreground: #060e14;
+	--sidebar-accent: #14212a;
+	--sidebar-accent-foreground: #eaeff3;
+	--sidebar-border: rgba(62, 73, 82, 0.25);
+	--sidebar-ring: #e96e50;
+}
+
+/* ============================================
+   oklch() colors for modern browsers.
+   These override the hex fallbacks above.
+   ============================================ */
+
+@supports (color: oklch(0 0 0)) {
+	:root {
+		/* Backgrounds & Base - Industrial blue tint */
+		--background: oklch(0.98 0.002 240);
+		--foreground: oklch(0.25 0.015 250);
+		/* Success - Verde industrial */
+		--success: oklch(0.70 0.14 142);
+		--success-foreground: oklch(0.98 0.005 142);
+		/* Warning - Amarillo/Naranja de precaución */
+		--warning: oklch(0.75 0.14 60);
+		--warning-foreground: oklch(0.25 0.015 60);
+		/* Info - Azul informativo */
+		--info: oklch(0.60 0.10 240);
+		--info-foreground: oklch(0.98 0.005 240);
+		/* Status colors for orders */
+		--status-pending: oklch(0.75 0.14 60);
+		--status-pending-foreground: oklch(0.25 0.015 60);
+		--status-paid: oklch(0.60 0.10 240);
+		--status-paid-foreground: oklch(0.98 0.005 240);
+		--status-shipped: oklch(0.65 0.12 280);
+		--status-shipped-foreground: oklch(0.98 0.005 280);
+		--status-completed: oklch(0.70 0.14 142);
+		--status-completed-foreground: oklch(0.98 0.005 142);
+		/* Cards */
+		--card: oklch(1 0 0);
+		--card-foreground: oklch(0.25 0.015 250);
+		/* Popovers */
+		--popover: oklch(1 0 0);
+		--popover-foreground: oklch(0.25 0.015 250);
+		/* Primary - Azul metálico acero */
+		--primary: oklch(0.38 0.05 240);
+		--primary-foreground: oklch(0.98 0.005 240);
+		/* Secondary - Naranja industrial */
+		--secondary: oklch(0.62 0.15 35);
+		--secondary-foreground: oklch(0.98 0.005 35);
+		/* Accent - Naranja suave para highlights */
+		--accent: oklch(0.95 0.03 35);
+		--accent-foreground: oklch(0.38 0.05 240);
+		/* Muted - Grises metálicos */
+		--muted: oklch(0.95 0.008 240);
+		--muted-foreground: oklch(0.50 0.015 240);
+		/* Destructive */
+		--destructive: oklch(0.577 0.245 27.325);
+		/* Borders & Inputs */
+		--border: oklch(0.88 0.01 240);
+		--input: oklch(0.88 0.01 240);
+		--ring: oklch(0.62 0.15 35);
+		/* Charts - Industrial colors */
+		--chart-1: oklch(0.62 0.15 35);
+		--chart-2: oklch(0.55 0.08 240);
+		--chart-3: oklch(0.65 0.12 280);
+		--chart-4: oklch(0.70 0.10 60);
+		--chart-5: oklch(0.50 0.05 200);
+		/* Sidebar */
+		--sidebar: oklch(0.96 0.008 240);
+		--sidebar-foreground: oklch(0.25 0.015 250);
+		--sidebar-primary: oklch(0.62 0.15 35);
+		--sidebar-primary-foreground: oklch(0.98 0.005 35);
+		--sidebar-accent: oklch(0.92 0.015 240);
+		--sidebar-accent-foreground: oklch(0.25 0.015 250);
+		--sidebar-border: oklch(0.88 0.01 240);
+		--sidebar-ring: oklch(0.62 0.15 35);
+	}
+
+	.dark {
+		/* Backgrounds - Dark metallic blue */
+		--background: oklch(0.18 0.015 240);
+		--foreground: oklch(0.95 0.008 240);
+		/* Success - Verde más brillante para dark mode */
+		--success: oklch(0.65 0.16 142);
+		--success-foreground: oklch(0.18 0.015 142);
+		/* Warning - Amarillo más brillante */
+		--warning: oklch(0.70 0.16 60);
+		--warning-foreground: oklch(0.18 0.015 60);
+		/* Info - Azul más brillante */
+		--info: oklch(0.65 0.12 240);
+		--info-foreground: oklch(0.18 0.015 240);
+		/* Status colors for orders - dark mode */
+		--status-pending: oklch(0.70 0.16 60);
+		--status-pending-foreground: oklch(0.18 0.015 60);
+		--status-paid: oklch(0.65 0.12 240);
+		--status-paid-foreground: oklch(0.18 0.015 240);
+		--status-shipped: oklch(0.70 0.14 280);
+		--status-shipped-foreground: oklch(0.18 0.015 280);
+		--status-completed: oklch(0.65 0.16 142);
+		--status-completed-foreground: oklch(0.18 0.015 142);
+		/* Cards - Slightly elevated */
+		--card: oklch(0.22 0.018 240);
+		--card-foreground: oklch(0.95 0.008 240);
+		/* Popovers */
+		--popover: oklch(0.22 0.018 240);
+		--popover-foreground: oklch(0.95 0.008 240);
+		/* Primary - Naranja brillante (strategic inversion) */
+		--primary: oklch(0.68 0.16 35);
+		--primary-foreground: oklch(0.18 0.015 240);
+		/* Secondary - Azul metálico claro */
+		--secondary: oklch(0.50 0.05 240);
+		--secondary-foreground: oklch(0.95 0.008 240);
+		/* Accent - Naranja oscuro */
+		--accent: oklch(0.30 0.04 35);
+		--accent-foreground: oklch(0.68 0.16 35);
+		/* Muted - Grises metálicos */
+		--muted: oklch(0.28 0.02 240);
+		--muted-foreground: oklch(0.60 0.015 240);
+		/* Destructive */
+		--destructive: oklch(0.704 0.191 22.216);
+		/* Borders - Semi-transparent glass effect */
+		--border: oklch(0.40 0.02 240 / 25%);
+		--input: oklch(0.40 0.02 240 / 35%);
+		--ring: oklch(0.68 0.16 35);
+		/* Charts - Bright industrial colors */
+		--chart-1: oklch(0.68 0.16 35);
+		--chart-2: oklch(0.60 0.10 240);
+		--chart-3: oklch(0.70 0.14 280);
+		--chart-4: oklch(0.75 0.12 60);
+		--chart-5: oklch(0.55 0.08 200);
+		/* Sidebar Dark */
+		--sidebar: oklch(0.16 0.018 240);
+		--sidebar-foreground: oklch(0.95 0.008 240);
+		--sidebar-primary: oklch(0.68 0.16 35);
+		--sidebar-primary-foreground: oklch(0.16 0.018 240);
+		--sidebar-accent: oklch(0.24 0.025 240);
+		--sidebar-accent-foreground: oklch(0.95 0.008 240);
+		--sidebar-border: oklch(0.40 0.02 240 / 25%);
+		--sidebar-ring: oklch(0.68 0.16 35);
+	}
 }
 
 @layer base {
