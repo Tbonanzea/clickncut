@@ -2,6 +2,7 @@
 
 import { useQuoting } from '@/context/quotingContext';
 import { useMaterials } from '@/hooks/useMaterials';
+import { useCalculatePrice } from '@/hooks/useCalculatePrice';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -14,22 +15,20 @@ import { Accordion } from '@/components/ui/accordion';
 import MaterialSelectionCard from '@/components/MaterialSelectionCard';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useEffect } from 'react';
+import type { PricingBreakdown } from '@/lib/pricing-engine';
 
 export default function MaterialSelectionPage() {
 	const { cart, updateItem, validateCurrentStep, nextStep, prevStep } =
 		useQuoting();
 	const { data: materials, isLoading, error } = useMaterials();
+	const {
+		data: priceResults,
+		isLoading: loadingPrices,
+	} = useCalculatePrice(cart.items);
 
 	// Validate step whenever cart items change
 	useEffect(() => {
 		validateCurrentStep();
-
-		cart.items.forEach((item) => {
-			const p = item.file._piercings;
-			console.log(
-				`[Step 2] File "${item.file.filename}" — singleClosed: ${p?.singleClosed ?? 'N/A'}, assembledPaths: ${p?.assembledPaths ?? 'N/A'}, totalPiercings: ${p?.total ?? 'N/A'}`
-			);
-		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart.items]);
 
@@ -43,7 +42,7 @@ export default function MaterialSelectionPage() {
 						description: mat.description || '',
 				  }
 				: null,
-			materialType: null, // Reset material type when material changes
+			materialType: null,
 		});
 	};
 
@@ -69,6 +68,7 @@ export default function MaterialSelectionPage() {
 						minCutLength: type.minCutLength,
 						maxCutWidth: type.maxCutWidth,
 						minCutWidth: type.minCutWidth,
+						finish: type.finish,
 				  }
 				: null,
 		});
@@ -84,11 +84,26 @@ export default function MaterialSelectionPage() {
 		}
 	};
 
+	// Helper to get breakdown for a specific cart item
+	const getBreakdown = (idx: number): PricingBreakdown | undefined =>
+		priceResults?.find((pr) => pr.itemIndex === idx)?.breakdown;
+
 	const canProceed =
 		cart.items.length > 0 &&
 		cart.items.every(
 			(item) => item.material && item.materialType && item.quantity > 0
 		);
+
+	// Calculate estimated total from pricing engine
+	const estimatedTotal = priceResults
+		? priceResults.reduce((sum, pr) => sum + pr.breakdown.totalOrderPrice, 0)
+		: 0;
+
+	// Fallback: count how many items have pricing ready
+	const pricedCount = priceResults?.length ?? 0;
+	const configuredCount = cart.items.filter(
+		(item) => item.material && item.materialType
+	).length;
 
 	if (isLoading) {
 		return (
@@ -177,6 +192,8 @@ export default function MaterialSelectionPage() {
 								onMaterialChange={handleMaterialChange}
 								onMaterialTypeChange={handleMaterialTypeChange}
 								onQuantityChange={handleQuantityChange}
+								breakdown={getBreakdown(idx)}
+								loadingPrice={loadingPrices}
 							/>
 						))}
 					</Accordion>
@@ -192,40 +209,37 @@ export default function MaterialSelectionPage() {
 								Archivos configurados
 							</p>
 							<p className='text-xl md:text-2xl font-semibold'>
-								{
-									cart.items.filter(
-										(item) =>
-											item.material && item.materialType
-									).length
-								}{' '}
-								/ {cart.items.length}
+								{configuredCount} / {cart.items.length}
 							</p>
 						</div>
 						<div className='md:text-right'>
 							<p className='text-sm text-muted-foreground'>
 								Subtotal estimado
 							</p>
-							<p className='text-xl md:text-2xl font-semibold text-success'>
-								$
-								{cart.items
-									.reduce((total, item) => {
-										if (item.materialType) {
-											return (
-												total +
-												item.materialType.pricePerUnit *
-													item.quantity
-											);
-										}
-										return total;
-									}, 0)
-									.toFixed(2)}
-							</p>
+							{loadingPrices && configuredCount > 0 ? (
+								<Loader2 className='h-5 w-5 animate-spin text-muted-foreground ml-auto' />
+							) : estimatedTotal > 0 ? (
+								<>
+									<p className='text-xl md:text-2xl font-semibold text-success'>
+										${estimatedTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+									</p>
+									{pricedCount < configuredCount && (
+										<p className='text-xs text-muted-foreground'>
+											({pricedCount} de {configuredCount} piezas cotizadas)
+										</p>
+									)}
+								</>
+							) : (
+								<p className='text-xl md:text-2xl font-semibold text-muted-foreground'>
+									—
+								</p>
+							)}
 						</div>
 					</div>
 				</CardContent>
 			</Card>
 
-			{/* Navigation - responsive */}
+			{/* Navigation */}
 			<div className='flex flex-col md:flex-row gap-3 md:justify-between'>
 				<Button variant='outline' onClick={prevStep} className='w-full md:w-auto min-h-[44px]'>
 					Volver

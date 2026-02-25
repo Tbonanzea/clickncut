@@ -21,6 +21,8 @@ export interface QuotingFile {
 	_validationErrors?: string[]; // Validation error messages
 	_parsedDxf?: any; // Cached parsed DXF object to avoid double-parsing
 	_piercings?: { singleClosed: number; assembledPaths: number; total: number };
+	_cutLength?: { totalMm: number }; // Total linear cut length in mm
+	_boundingBox?: { widthMm: number; heightMm: number }; // Piece bounding box
 }
 
 export interface QuotingMaterial {
@@ -42,6 +44,7 @@ export interface QuotingMaterialType {
 	minCutLength: number;
 	maxCutWidth: number;
 	minCutWidth: number;
+	finish?: string | null;
 }
 
 export interface QuotingCartItem {

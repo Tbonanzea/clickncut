@@ -5,7 +5,7 @@
 
 import DxfParser from 'dxf-parser';
 import { validateDXF } from '@/lib/dxf-validation';
-import { computeTotalPiercings, validateDXFGeometry } from '@/lib/dxf-area';
+import { computeTotalPiercings, computeTotalCutLength, computeDXFBoundingBox, validateDXFGeometry } from '@/lib/dxf-area';
 import type {
 	WorkerRequest,
 	ParseDxfSuccess,
@@ -57,6 +57,18 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 				parsed.blocks
 			);
 
+			// Compute total cut length (sum of all path segments)
+			const cutLength = computeTotalCutLength(
+				parsed.entities || [],
+				parsed.blocks
+			);
+
+			// Compute bounding box
+			const boundingBox = computeDXFBoundingBox(
+				parsed.entities || [],
+				parsed.blocks
+			);
+
 			// Send success response back to main thread
 			const successResponse: ParseDxfSuccess = {
 				type: 'PARSE_DXF_SUCCESS',
@@ -65,6 +77,8 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 					parsed,
 					validation,
 					piercings,
+					cutLength,
+					boundingBox,
 				},
 			};
 			self.postMessage(successResponse);

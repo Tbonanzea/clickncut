@@ -107,17 +107,43 @@ export function useSubmitQuote() {
 			const uploadedItems = await Promise.all(uploadPromises);
 
 			// Step 2: Create order via API
-			// Prepare order items for API
-			const orderItems = uploadedItems.map((item) => ({
-				fileData: {
-					filename: item.file.filename,
-					filepath: item.file.filepath,
-					filetype: item.file.filetype,
-				},
-				materialTypeId: item.materialType!.id,
-				quantity: item.quantity,
-				price: item.materialType!.pricePerUnit,
-			}));
+			// Compute real prices using pricing engine
+			const orderItems = await Promise.all(
+				uploadedItems.map(async (item) => {
+					let price = item.materialType!.pricePerUnit; // fallback
+
+					// Calculate real price if DXF data is available
+					if (item.file._cutLength && item.file._piercings && item.file._boundingBox) {
+						try {
+							const { computeQuotePrice } = await import('@/app/(dashboard)/pricing/actions');
+							const result = await computeQuotePrice({
+								materialTypeId: item.materialType!.id,
+								boundingBoxWidthMm: item.file._boundingBox.widthMm,
+								boundingBoxHeightMm: item.file._boundingBox.heightMm,
+								cutLengthMm: item.file._cutLength.totalMm,
+								piercingCount: item.file._piercings.total,
+								quantity: item.quantity,
+							});
+							if (result.success) {
+								price = result.breakdown.unitSalePrice;
+							}
+						} catch (e) {
+							console.error('Failed to compute price, using fallback:', e);
+						}
+					}
+
+					return {
+						fileData: {
+							filename: item.file.filename,
+							filepath: item.file.filepath,
+							filetype: item.file.filetype,
+						},
+						materialTypeId: item.materialType!.id,
+						quantity: item.quantity,
+						price,
+					};
+				})
+			);
 
 			// Call orders API
 			const response = await fetch('/api/orders', {

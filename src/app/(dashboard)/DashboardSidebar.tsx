@@ -22,6 +22,7 @@ import {
 	User,
 	ClipboardList,
 	Menu,
+	Calculator,
 } from 'lucide-react';
 
 interface DashboardSidebarProps {
@@ -63,6 +64,11 @@ export default function DashboardSidebar({ isAdmin }: DashboardSidebarProps) {
 			href: '/extras',
 			label: 'Extras',
 			icon: <Wrench className='h-5 w-5' />,
+		},
+		{
+			href: '/pricing',
+			label: 'Precios',
+			icon: <Calculator className='h-5 w-5' />,
 		},
 	];
 

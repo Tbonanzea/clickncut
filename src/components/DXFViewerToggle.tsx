@@ -65,7 +65,7 @@ export default function DXFViewerToggle({
 	}
 
 	return (
-		<div className={`flex flex-col gap-3 ${className}`}>
+		<div className={`flex flex-col gap-3 flex-1 ${className}`}>
 			{/* Toggle Buttons - only show if 3D view is available */}
 			{has3DView ? (
 				<div className='flex gap-2 items-center justify-center'>
@@ -95,7 +95,7 @@ export default function DXFViewerToggle({
 			)}
 
 			{/* Viewer Container */}
-			<div className='w-full'>
+			<div className='w-full flex-1'>
 				{viewMode === '2D' || !has3DView ? (
 					<DXFViewerSimple
 						dxfUrl={dxfUrl}

@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Most Important Rules
-
-- Always start tasks by using the workspace-orchestrator agent.
-
 ## Project Overview
 
 CutForge is a custom cutting platform built with Next.js 15 (App Router), Supabase (SSR auth), Prisma (PostgreSQL ORM), TanStack Query (async state), React Hook Form, and Tailwind CSS. The application handles DXF file uploads, material selection, and generates quotes for custom cutting jobs.
