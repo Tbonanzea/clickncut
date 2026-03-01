@@ -30,7 +30,7 @@ export async function signup(formData: SignUpData) {
 	const { data, error } = await supabase.auth.signUp({
 		...formData,
 		options: {
-			emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/error`,
+			emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
 		},
 	});
 
