@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 	redirectTo.pathname = '/error';
 	redirectTo.searchParams.set(
 		'error',
-		`Redirecting to ${next} failed. Probablemente el enlace ha expirado.`
+		'El enlace de confirmacion ha expirado o es invalido. Solicita uno nuevo.'
 	);
 	return NextResponse.redirect(redirectTo);
 }

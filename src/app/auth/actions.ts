@@ -10,6 +10,24 @@ import { AuthProvider } from '@/generated/prisma/client';
 import { Provider } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 
+const supabaseErrorMessages: Record<string, string> = {
+	'Invalid login credentials': 'Email o contraseña incorrectos.',
+	'Email not confirmed': 'Tu email no ha sido verificado. Revisa tu bandeja de entrada.',
+	'User already registered': 'Ya existe una cuenta con este email.',
+	'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres.',
+	'Email rate limit exceeded': 'Demasiados intentos. Intenta de nuevo en unos minutos.',
+	'For security purposes, you can only request this after': 'Por seguridad, debes esperar antes de intentar de nuevo.',
+	'New password should be different from the old password.': 'La nueva contraseña debe ser diferente a la anterior.',
+	'Auth session missing!': 'Tu sesion ha expirado. Inicia sesion de nuevo.',
+};
+
+function translateSupabaseError(message: string): string {
+	for (const [key, value] of Object.entries(supabaseErrorMessages)) {
+		if (message.includes(key)) return value;
+	}
+	return message;
+}
+
 export async function signup(formData: SignUpData) {
 	const { user } = await getUserByEmail(formData.email);
 	if (user) {
@@ -17,12 +35,15 @@ export async function signup(formData: SignUpData) {
 			AuthProvider.EMAIL
 		);
 
+		if (isLocalAuthProvider) {
+			throw new Error('Ya existe una cuenta con este email.');
+		}
+
+		const providers = user.authProviders
+			.filter((p) => p !== AuthProvider.EMAIL)
+			.join(', ');
 		throw new Error(
-			`Ya existe un usuario con ese email${
-				!isLocalAuthProvider
-					? ` pero se ha registrado con alguno de estos metodos: ${user.authProviders.toString()}`
-					: ''
-			}`
+			`Ya existe una cuenta con este email registrada con ${providers}. Inicia sesion con ese metodo.`
 		);
 	}
 
@@ -35,11 +56,11 @@ export async function signup(formData: SignUpData) {
 	});
 
 	if (error) {
-		throw new Error(error.message);
+		throw new Error(translateSupabaseError(error.message));
 	}
 
 	if (!data?.user) {
-		throw new Error('No se ha podido registrar el usuario');
+		throw new Error('No se pudo crear la cuenta. Intenta de nuevo.');
 	}
 
 	const newUserResponse = await createUser({
@@ -90,7 +111,7 @@ export async function newPassword({
 	});
 
 	if (error) {
-		throw new Error(error.message);
+		throw new Error(translateSupabaseError(error.message));
 	}
 
 	if (data.user && emailRedirectTo) {
@@ -106,26 +127,24 @@ export async function login(formData: LogInData) {
 	const { data, error } = await supabase.auth.signInWithPassword(formData);
 
 	if (error) {
-		// Check is user is social login in prisma
-		let appendMessage = '';
 		const user = await prisma.user.findUnique({
-			where: {
-				email: formData.email,
-			},
+			where: { email: formData.email },
 		});
 
 		if (!user) {
-			throw new Error('Usuario no existe.');
+			throw new Error('No existe una cuenta con este email.');
 		}
 
-		// Append message if user is not local
-		if (!user?.authProviders.includes(AuthProvider.EMAIL)) {
-			appendMessage = `Tu usuario fue creado con ${user?.authProviders.filter(
-				(provider) => provider !== AuthProvider.EMAIL
-			)}, por favor inicia sesion con alguno de estos metodos.`;
+		if (!user.authProviders.includes(AuthProvider.EMAIL)) {
+			const providers = user.authProviders
+				.filter((p) => p !== AuthProvider.EMAIL)
+				.join(', ');
+			throw new Error(
+				`Esta cuenta fue creada con ${providers}. Inicia sesion con ese metodo.`
+			);
 		}
 
-		throw new Error(`Inicio de sesion invalido. ${appendMessage}`);
+		throw new Error(translateSupabaseError(error.message));
 	}
 
 	return data;
