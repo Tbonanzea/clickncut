@@ -69,9 +69,9 @@ const formulas: FormulaRow[] = [
 		step: 7,
 		name: 'Área de la pieza',
 		description:
-			'Área del bounding box del DXF en cm². Sirve para calcular qué proporción de chapa ocupa.',
-		formula: '(Ancho bbox × Alto bbox) / 100',
-		code: '(bbWidthMm × bbHeightMm) / 100',
+			'Área real de la pieza en cm² (calculada por encadenamiento de contornos). Sirve para calcular qué proporción de chapa ocupa.',
+		formula: 'Área real contorno / 100',
+		code: 'pieceAreaCm2 (from computeTotalDXFArea)',
 	},
 	{
 		step: 8,

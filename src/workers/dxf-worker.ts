@@ -5,7 +5,7 @@
 
 import DxfParser from 'dxf-parser';
 import { validateDXF } from '@/lib/dxf-validation';
-import { computeTotalPiercings, computeTotalCutLength, computeDXFBoundingBox, validateDXFGeometry } from '@/lib/dxf-area';
+import { computeTotalPiercings, computeTotalCutLength, computeDXFBoundingBox, computeTotalDXFArea, validateDXFGeometry } from '@/lib/dxf-area';
 import type {
 	WorkerRequest,
 	ParseDxfSuccess,
@@ -69,6 +69,12 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 				parsed.blocks
 			);
 
+			// Compute real piece area (mm²) using contour chaining
+			const pieceAreaMm2 = computeTotalDXFArea(
+				parsed.entities || [],
+				parsed.blocks
+			);
+
 			// Send success response back to main thread
 			const successResponse: ParseDxfSuccess = {
 				type: 'PARSE_DXF_SUCCESS',
@@ -79,6 +85,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 					piercings,
 					cutLength,
 					boundingBox,
+					pieceAreaMm2,
 				},
 			};
 			self.postMessage(successResponse);

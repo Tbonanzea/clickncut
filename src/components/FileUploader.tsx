@@ -101,7 +101,7 @@ function FileUploader() {
 
 				// Parse and validate DXF file in Web Worker
 				try {
-					const { parsed, validation, piercings, cutLength, boundingBox } = await parseDxf(text);
+					const { parsed, validation, piercings, cutLength, boundingBox, pieceAreaMm2 } = await parseDxf(text);
 
 					setUploadProgress(
 						Math.round(((processed + 1) / filesToProcess.length) * 100)
@@ -148,6 +148,7 @@ function FileUploader() {
 							_piercings: piercings,
 							_cutLength: cutLength,
 							_boundingBox: boundingBox,
+							_pieceAreaMm2: pieceAreaMm2,
 						};
 						addItem({
 							file: quotingFile,

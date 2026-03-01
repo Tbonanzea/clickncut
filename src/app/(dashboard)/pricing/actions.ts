@@ -233,6 +233,7 @@ export async function computeQuotePrice(input: {
 	materialTypeId: string;
 	boundingBoxWidthMm: number;
 	boundingBoxHeightMm: number;
+	pieceAreaCm2: number;
 	cutLengthMm: number;
 	piercingCount: number;
 	quantity: number;
@@ -335,6 +336,7 @@ export async function computeQuotePrice(input: {
 			totalFixedCostPerMonth,
 			boundingBoxWidthMm: input.boundingBoxWidthMm,
 			boundingBoxHeightMm: input.boundingBoxHeightMm,
+			pieceAreaCm2: input.pieceAreaCm2,
 			cutLengthMm: input.cutLengthMm,
 			piercingCount: input.piercingCount,
 			quantity: input.quantity,

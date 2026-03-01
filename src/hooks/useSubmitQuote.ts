@@ -113,13 +113,14 @@ export function useSubmitQuote() {
 					let price = item.materialType!.pricePerUnit; // fallback
 
 					// Calculate real price if DXF data is available
-					if (item.file._cutLength && item.file._piercings && item.file._boundingBox) {
+					if (item.file._cutLength && item.file._piercings && item.file._boundingBox && item.file._pieceAreaMm2 != null) {
 						try {
 							const { computeQuotePrice } = await import('@/app/(dashboard)/pricing/actions');
 							const result = await computeQuotePrice({
 								materialTypeId: item.materialType!.id,
 								boundingBoxWidthMm: item.file._boundingBox.widthMm,
 								boundingBoxHeightMm: item.file._boundingBox.heightMm,
+								pieceAreaCm2: item.file._pieceAreaMm2 / 100,
 								cutLengthMm: item.file._cutLength.totalMm,
 								piercingCount: item.file._piercings.total,
 								quantity: item.quantity,

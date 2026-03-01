@@ -25,6 +25,7 @@ export function useCalculatePrice(items: QuotingCartItem[]) {
 				pc: item.file._piercings?.total,
 				bw: item.file._boundingBox?.widthMm,
 				bh: item.file._boundingBox?.heightMm,
+				pa: item.file._pieceAreaMm2,
 			})),
 		],
 		queryFn: async (): Promise<PriceResult[]> => {
@@ -34,7 +35,8 @@ export function useCalculatePrice(items: QuotingCartItem[]) {
 						!item.materialType ||
 						!item.file._cutLength ||
 						!item.file._piercings ||
-						!item.file._boundingBox
+						!item.file._boundingBox ||
+						item.file._pieceAreaMm2 == null
 					) {
 						return null;
 					}
@@ -43,6 +45,7 @@ export function useCalculatePrice(items: QuotingCartItem[]) {
 						materialTypeId: item.materialType.id,
 						boundingBoxWidthMm: item.file._boundingBox.widthMm,
 						boundingBoxHeightMm: item.file._boundingBox.heightMm,
+						pieceAreaCm2: item.file._pieceAreaMm2! / 100,
 						cutLengthMm: item.file._cutLength.totalMm,
 						piercingCount: item.file._piercings.total,
 						quantity: item.quantity,
@@ -66,7 +69,8 @@ export function useCalculatePrice(items: QuotingCartItem[]) {
 				item.materialType &&
 				item.file._cutLength &&
 				item.file._piercings &&
-				item.file._boundingBox
+				item.file._boundingBox &&
+				item.file._pieceAreaMm2 != null
 		),
 		staleTime: 30 * 1000, // 30 seconds
 	});

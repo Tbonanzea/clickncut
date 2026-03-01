@@ -37,6 +37,7 @@ export interface ParseDxfSuccess {
 		piercings: PiercingsBreakdown;
 		cutLength: CutLengthResult;
 		boundingBox: BoundingBoxResult;
+		pieceAreaMm2: number; // Real piece area from contour chaining
 	};
 }
 
@@ -57,4 +58,5 @@ export interface ParsedDxfResult {
 	piercings: PiercingsBreakdown;
 	cutLength: CutLengthResult;
 	boundingBox: BoundingBoxResult;
+	pieceAreaMm2: number;
 }

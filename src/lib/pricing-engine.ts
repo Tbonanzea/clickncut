@@ -72,6 +72,7 @@ export interface PricingInput {
 	// From DXF geometry (client-side)
 	boundingBoxWidthMm: number;
 	boundingBoxHeightMm: number;
+	pieceAreaCm2: number; // Real piece area from contour chaining
 	cutLengthMm: number;
 	piercingCount: number;
 
@@ -166,9 +167,8 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 	const consumablesCost =
 		(totalCuttingTimeMin / 60) * (lensCostPerHour + nozzleCostPerHour);
 
-	// --- Step 7: Piece area (cm²) ---
-	const pieceAreaCm2 =
-		(input.boundingBoxWidthMm * input.boundingBoxHeightMm) / 100;
+	// --- Step 7: Piece area (cm²) — real area from contour chaining ---
+	const pieceAreaCm2 = input.pieceAreaCm2;
 
 	// --- Step 8: Sheet area (cm²) ---
 	const sheetAreaCm2 = (material.sheetWidth * material.sheetLength) / 100;

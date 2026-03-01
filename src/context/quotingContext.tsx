@@ -23,6 +23,7 @@ export interface QuotingFile {
 	_piercings?: { singleClosed: number; assembledPaths: number; total: number };
 	_cutLength?: { totalMm: number }; // Total linear cut length in mm
 	_boundingBox?: { widthMm: number; heightMm: number }; // Piece bounding box
+	_pieceAreaMm2?: number; // Real piece area from contour chaining (mm²)
 }
 
 export interface QuotingMaterial {
