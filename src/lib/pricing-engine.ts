@@ -58,6 +58,7 @@ export interface PricingConfigValues {
 	// Margins
 	profitMargin: number;
 	urgencySurcharge: number;
+	paymentCommission: number; // MercadoPago commission (e.g. 0.06 = 6%)
 
 	// Waste
 	materialWasteFactor: number;
@@ -110,6 +111,7 @@ export interface PricingBreakdown {
 	profitPerPiece: number;
 	volumeDiscount: number; // negative value
 	urgencySurchargeAmount: number;
+	paymentCommissionAmount: number;
 	unitSalePrice: number;
 	totalOrderPrice: number;
 
@@ -248,8 +250,12 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 		dispatchCost +
 		shippingCost;
 
-	// --- Step 17: Profit ---
-	const profitPerPiece = totalCostPerPiece * config.profitMargin;
+	// --- Step 17: Profit (margin on sale price) ---
+	// sale = cost / (1 - margin)  →  profit = sale - cost = cost × margin / (1 - margin)
+	const profitPerPiece =
+		config.profitMargin < 1
+			? (totalCostPerPiece * config.profitMargin) / (1 - config.profitMargin)
+			: 0;
 
 	// --- Step 18: Volume discount ---
 	const volumeDiscount =
@@ -260,14 +266,22 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 		? (totalCostPerPiece + profitPerPiece) * config.urgencySurcharge
 		: 0;
 
-	// --- Step 20: Unit sale price ---
-	const unitSalePrice =
+	// --- Step 20: Subtotal before payment commission ---
+	const subtotalPerPiece =
 		totalCostPerPiece +
 		profitPerPiece +
 		volumeDiscount +
 		urgencySurchargeAmount;
 
-	// --- Step 21: Total order price ---
+	// --- Step 21: Payment commission (MercadoPago) ---
+	// price / (1 - commission) so that after MP deducts its %, we receive subtotal
+	const unitSalePrice =
+		config.paymentCommission < 1
+			? subtotalPerPiece / (1 - config.paymentCommission)
+			: subtotalPerPiece;
+	const paymentCommissionAmount = unitSalePrice - subtotalPerPiece;
+
+	// --- Step 22: Total order price ---
 	const totalOrderPrice = unitSalePrice * input.quantity;
 
 	return {
@@ -289,6 +303,7 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 		profitPerPiece,
 		volumeDiscount,
 		urgencySurchargeAmount,
+		paymentCommissionAmount,
 		unitSalePrice,
 		totalOrderPrice,
 		totalOrderWeightKg,

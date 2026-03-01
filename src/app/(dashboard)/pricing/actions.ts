@@ -122,6 +122,7 @@ export async function upsertPricingConfig(data: {
 	shippingCostPerOrder: number;
 	profitMargin: number;
 	urgencySurcharge: number;
+	paymentCommission: number;
 	materialWasteFactor: number;
 	nestingSafetyMargin: number;
 }) {
@@ -326,6 +327,7 @@ export async function computeQuotePrice(input: {
 			shippingCostPerOrder: config.shippingCostPerOrder,
 			profitMargin: config.profitMargin,
 			urgencySurcharge: config.urgencySurcharge,
+			paymentCommission: config.paymentCommission,
 			materialWasteFactor: config.materialWasteFactor,
 			nestingSafetyMargin: config.nestingSafetyMargin,
 		};

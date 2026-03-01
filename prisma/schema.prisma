@@ -252,6 +252,7 @@ model PricingConfig {
   isActive                 Boolean  @default(true)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
+  paymentCommission        Float    @default(0.06)
 }
 
 model VolumeDiscount {

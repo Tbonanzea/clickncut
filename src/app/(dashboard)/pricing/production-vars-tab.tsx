@@ -50,6 +50,7 @@ interface PricingConfig {
 	shippingCostPerOrder: number;
 	profitMargin: number;
 	urgencySurcharge: number;
+	paymentCommission: number;
 	materialWasteFactor: number;
 	nestingSafetyMargin: number;
 }
@@ -77,6 +78,7 @@ const defaults: Omit<PricingConfig, 'id'> = {
 	shippingCostPerOrder: 1500,
 	profitMargin: 0.35,
 	urgencySurcharge: 0.50,
+	paymentCommission: 0.06,
 	materialWasteFactor: 0.15,
 	nestingSafetyMargin: 0.05,
 };
@@ -211,6 +213,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 				shippingCostPerOrder: parseFloat(form.shippingCostPerOrder),
 				profitMargin: config?.profitMargin ?? defaults.profitMargin,
 				urgencySurcharge: config?.urgencySurcharge ?? defaults.urgencySurcharge,
+				paymentCommission: config?.paymentCommission ?? defaults.paymentCommission,
 				materialWasteFactor: parseFloat(form.materialWasteFactor) / 100,
 				nestingSafetyMargin: parseFloat(form.nestingSafetyMargin) / 100,
 			};

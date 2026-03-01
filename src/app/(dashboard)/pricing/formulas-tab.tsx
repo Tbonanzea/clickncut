@@ -70,23 +70,23 @@ const formulas: FormulaRow[] = [
 		name: 'Área de la pieza',
 		description:
 			'Área real de la pieza en cm² (calculada por encadenamiento de contornos). Sirve para calcular qué proporción de chapa ocupa.',
-		formula: 'Área real contorno / 100',
-		code: 'pieceAreaCm2 (from computeTotalDXFArea)',
+		formula: 'pieceAreaMm2 / 100',
+		code: 'pieceAreaCm2 = input.pieceAreaCm2',
 	},
 	{
 		step: 8,
 		name: 'Área de la chapa',
 		description: 'Área total de una chapa entera en cm².',
 		formula: '(Ancho chapa × Largo chapa) / 100',
-		code: '(sheetWidth × sheetLength) / 100',
+		code: 'sheetAreaCm2 = (sheetWidth × sheetLength) / 100',
 	},
 	{
 		step: 9,
 		name: 'Costo de material',
 		description:
 			'Fracción de chapa que usa la pieza × precio de la chapa, con un % extra por desperdicio.',
-		formula: '(Área pieza / Área chapa) × Precio × (1 + Desperdicio)',
-		code: '(pieceArea / sheetArea) × price × (1 + wasteFactor)',
+		formula: '(pieceAreaCm2 / sheetAreaCm2) × Precio × (1 + Desperdicio)',
+		code: '(pieceAreaCm2 / sheetAreaCm2) × pricePerUnit × (1 + materialWasteFactor)',
 	},
 	{
 		step: 10,
@@ -148,9 +148,9 @@ const formulas: FormulaRow[] = [
 		step: 17,
 		name: 'Ganancia',
 		description:
-			'Margen de ganancia aplicado sobre el costo total (ej: 35% del costo).',
-		formula: 'Costo total × Margen %',
-		code: 'totalCost × profitMargin',
+			'Margen sobre precio de venta (ej: 35% significa que la ganancia es el 35% del precio final).',
+		formula: 'Costo total × Margen / (1 − Margen)',
+		code: 'totalCostPerPiece × profitMargin / (1 - profitMargin)',
 	},
 	{
 		step: 18,
@@ -170,18 +170,26 @@ const formulas: FormulaRow[] = [
 	},
 	{
 		step: 20,
-		name: 'Precio unitario',
+		name: 'Subtotal / pieza',
 		description:
-			'Precio final por pieza: costo + ganancia - descuento + urgencia.',
+			'Subtotal por pieza antes de comisión de pago: costo + ganancia - descuento + urgencia.',
 		formula: 'Costo + Ganancia + Desc. + Urgencia',
-		code: 'totalCost + profit + discount + urgency',
+		code: 'totalCostPerPiece + profitPerPiece + volumeDiscount + urgencySurchargeAmount',
 	},
 	{
 		step: 21,
+		name: 'Comisión MercadoPago',
+		description:
+			'Se ajusta el precio para absorber la comisión de MercadoPago (ej: 6%), de modo que después del descuento de MP se recibe el subtotal deseado.',
+		formula: 'Subtotal / (1 − Comisión %)',
+		code: 'unitSalePrice = subtotalPerPiece / (1 - paymentCommission)',
+	},
+	{
+		step: 22,
 		name: 'Precio total',
 		description: 'Precio unitario multiplicado por la cantidad de piezas.',
 		formula: 'Precio unit. × Cantidad',
-		code: 'unitPrice × quantity',
+		code: 'unitSalePrice × quantity',
 	},
 ];
 

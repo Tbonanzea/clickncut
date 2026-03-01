@@ -45,6 +45,7 @@ interface DiscountsTabProps {
 		updatedAt: Date;
 		profitMargin: number;
 		urgencySurcharge: number;
+		paymentCommission: number;
 		productiveHoursPerMonth: number;
 		workingDaysPerMonth: number;
 		machineEfficiency: number;
@@ -82,6 +83,9 @@ export function DiscountsTab({ config, volumeDiscounts }: DiscountsTabProps) {
 	const [urgencySurcharge, setUrgencySurcharge] = useState(
 		config ? (config.urgencySurcharge * 100).toString() : '50'
 	);
+	const [paymentCommission, setPaymentCommission] = useState(
+		config ? (config.paymentCommission * 100).toString() : '6'
+	);
 
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [showNewForm, setShowNewForm] = useState(false);
@@ -107,6 +111,7 @@ export function DiscountsTab({ config, volumeDiscounts }: DiscountsTabProps) {
 				...configFields,
 				profitMargin: parseFloat(profitMargin) / 100,
 				urgencySurcharge: parseFloat(urgencySurcharge) / 100,
+				paymentCommission: parseFloat(paymentCommission) / 100,
 			});
 			if (!result.success) {
 				setError(result.error);
@@ -234,6 +239,26 @@ export function DiscountsTab({ config, volumeDiscounts }: DiscountsTabProps) {
 										setSaved(false);
 									}}
 									step='1'
+									className='font-mono h-9 text-sm'
+								/>
+								<span className='text-xs text-muted-foreground'>
+									%
+								</span>
+							</div>
+						</div>
+						<div className='space-y-1.5 flex-1'>
+							<Label className='text-xs font-medium text-muted-foreground'>
+								Comisión MercadoPago
+							</Label>
+							<div className='flex items-center gap-1.5'>
+								<Input
+									type='number'
+									value={paymentCommission}
+									onChange={(e) => {
+										setPaymentCommission(e.target.value);
+										setSaved(false);
+									}}
+									step='0.1'
 									className='font-mono h-9 text-sm'
 								/>
 								<span className='text-xs text-muted-foreground'>

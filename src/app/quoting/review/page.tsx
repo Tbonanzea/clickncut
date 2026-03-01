@@ -83,6 +83,9 @@ function PriceBreakdown({ breakdown }: { breakdown: PricingBreakdown }) {
 					{breakdown.urgencySurchargeAmount > 0 && (
 						<BreakdownRow label='Recargo urgencia' value={breakdown.urgencySurchargeAmount} />
 					)}
+					{breakdown.paymentCommissionAmount > 0 && (
+						<BreakdownRow label='Comisión MercadoPago' value={breakdown.paymentCommissionAmount} />
+					)}
 					<Separator className='my-2' />
 					<div className='flex justify-between font-medium text-sm'>
 						<span>Precio unitario</span>
