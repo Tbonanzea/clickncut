@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 	description:
 		'Sube tu archivo DXF, selecciona el material y obtén una cotización instantánea para tu proyecto de corte láser o CNC.',
 	openGraph: {
-		title: 'Cotizador de Corte Láser y CNC | CutForge',
+		title: 'Cotizador de Corte Láser y CNC | ClicknCut',
 		description:
 			'Sube tu archivo DXF, selecciona el material y obtén una cotización instantánea para tu proyecto de corte láser o CNC.',
 	},

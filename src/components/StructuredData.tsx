@@ -1,18 +1,18 @@
 export function LocalBusinessJsonLd() {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cutforge.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
 
 	const structuredData = {
 		'@context': 'https://schema.org',
 		'@type': 'LocalBusiness',
 		'@id': `${baseUrl}/#business`,
-		name: 'CutForge',
+		name: 'ClicknCut',
 		description:
 			'Plataforma de corte láser y CNC personalizado. Servicios de corte de precisión en metal, acrílico, MDF y más materiales.',
 		url: baseUrl,
 		logo: `${baseUrl}/logo.png`,
 		image: `${baseUrl}/og-image.png`,
 		telephone: '+54 9 351 XXXX-XXXX', // TODO: Replace with actual phone
-		email: 'contacto@cutforge.com', // TODO: Replace with actual email
+		email: 'contacto@clickncut.com', // TODO: Replace with actual email
 		address: {
 			'@type': 'PostalAddress',
 			addressLocality: 'Cordoba',
@@ -78,8 +78,8 @@ export function LocalBusinessJsonLd() {
 		},
 		sameAs: [
 			// TODO: Add social media URLs
-			// 'https://www.instagram.com/cutforge',
-			// 'https://www.facebook.com/cutforge',
+			// 'https://www.instagram.com/clickncut',
+			// 'https://www.facebook.com/clickncut',
 		],
 	};
 
@@ -92,14 +92,14 @@ export function LocalBusinessJsonLd() {
 }
 
 export function WebsiteJsonLd() {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cutforge.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
 
 	const structuredData = {
 		'@context': 'https://schema.org',
 		'@type': 'WebSite',
 		'@id': `${baseUrl}/#website`,
 		url: baseUrl,
-		name: 'CutForge',
+		name: 'ClicknCut',
 		description: 'Plataforma de corte láser y CNC personalizado',
 		publisher: {
 			'@id': `${baseUrl}/#business`,
@@ -127,7 +127,7 @@ export function BreadcrumbJsonLd({
 }: {
 	items: { name: string; url: string }[];
 }) {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cutforge.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
 
 	const structuredData = {
 		'@context': 'https://schema.org',

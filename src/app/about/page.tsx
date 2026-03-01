@@ -15,9 +15,9 @@ import {
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-	title: 'Acerca de CutForge',
+	title: 'Acerca de ClicknCut',
 	description:
-		'Conoce CutForge: la plataforma de corte láser y CNC diseñada para makers. Cotización instantánea, calidad industrial, entrega rápida.',
+		'Conoce ClicknCut: la plataforma de corte láser y CNC diseñada para makers. Cotización instantánea, calidad industrial, entrega rápida.',
 };
 
 export default function AboutPage() {
@@ -35,7 +35,7 @@ export default function AboutPage() {
 						<span className='text-secondary'>accesible para todos</span>
 					</h1>
 					<p className='text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto'>
-						CutForge nació para eliminar las barreras entre tu diseño y la
+						ClicknCut nació para eliminar las barreras entre tu diseño y la
 						realidad. Sin mínimos de orden, sin procesos complicados.
 					</p>
 				</div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
 								</p>
 								<p>
 									<strong className='text-foreground'>
-										Por eso creamos CutForge:
+										Por eso creamos ClicknCut:
 									</strong>{' '}
 									una plataforma que te da cotización instantánea, precios
 									transparentes y entrega en días, no semanas.

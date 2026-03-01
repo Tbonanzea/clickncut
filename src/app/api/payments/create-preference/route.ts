@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
 				auto_return: 'approved',
 				external_reference: orderId,
 				notification_url: `${siteUrl}/api/webhooks/mercadopago`,
-				statement_descriptor: 'CUTFORGE',
+				statement_descriptor: 'CLICKNCUT',
 				expires: true,
 				expiration_date_from: new Date().toISOString(),
 				expiration_date_to: new Date(

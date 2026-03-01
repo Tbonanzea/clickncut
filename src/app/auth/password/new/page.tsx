@@ -13,7 +13,7 @@ import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
 	title: 'Nueva Contraseña',
-	description: 'Establece una nueva contraseña para tu cuenta de CutForge.',
+	description: 'Establece una nueva contraseña para tu cuenta de ClicknCut.',
 	robots: {
 		index: false,
 		follow: false,
@@ -46,7 +46,7 @@ export default async function NewPasswordPage({
 							<Link href='/' className='inline-block'>
 								<Image
 									src='/images/logo.png'
-									alt='CutForge'
+									alt='ClicknCut'
 									width={180}
 									height={45}
 									className='h-24 w-auto mx-auto'

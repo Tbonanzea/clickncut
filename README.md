@@ -1,6 +1,6 @@
-# CutForge (Proyecto Next.js 15)
+# ClicknCut (Proyecto Next.js 15)
 
-CutForge es una aplicación que integra **Next.js 15** (con el nuevo App Router), **Supabase** (para autenticación SSR), **Prisma** (ORM para PostgreSQL), **TanStack Query** (manejo de estado asíncrono), **React Hook Form** (formularios) y **Tailwind CSS** (estilos).  
+ClicknCut es una aplicación que integra **Next.js 15** (con el nuevo App Router), **Supabase** (para autenticación SSR), **Prisma** (ORM para PostgreSQL), **TanStack Query** (manejo de estado asíncrono), **React Hook Form** (formularios) y **Tailwind CSS** (estilos).  
 Su objetivo es ofrecer una plataforma de corte a pedido, con un flujo moderno y escalable.
 
 ---

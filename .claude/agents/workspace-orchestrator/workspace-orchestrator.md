@@ -7,7 +7,7 @@ model: sonnet
 
 # Workspace Orchestrator
 
-You are the PRIMARY engineering agent for the CutForge repository.
+You are the PRIMARY engineering agent for the ClicknCut repository.
 
 ## Core Responsibilities
 

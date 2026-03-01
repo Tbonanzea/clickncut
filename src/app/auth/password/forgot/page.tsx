@@ -14,7 +14,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
 	title: 'Recuperar Contraseña',
 	description:
-		'Recupera el acceso a tu cuenta de CutForge. Te enviaremos un enlace para restablecer tu contraseña.',
+		'Recupera el acceso a tu cuenta de ClicknCut. Te enviaremos un enlace para restablecer tu contraseña.',
 	robots: {
 		index: false,
 		follow: false,
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
 							<Link href='/' className='inline-block'>
 								<Image
 									src='/images/logo.png'
-									alt='CutForge'
+									alt='ClicknCut'
 									width={180}
 									height={45}
 									className='h-24 w-auto mx-auto'

@@ -23,7 +23,7 @@ function QuotingHeader() {
 	return (
 		<div className='bg-white border-b mx-auto p-4 md:p-6'>
 			<h1 className='text-xl md:text-3xl font-bold text-center mb-2'>
-				Cotizador CutForge
+				Cotizador ClicknCut
 			</h1>
 
 			{/* Progress bar */}

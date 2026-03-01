@@ -8,7 +8,7 @@ import DashboardSidebar from './DashboardSidebar';
 
 export const metadata: Metadata = {
 	title: {
-		template: '%s | Panel CutForge',
+		template: '%s | Panel ClicknCut',
 		default: 'Panel de Control',
 	},
 	robots: {

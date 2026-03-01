@@ -15,7 +15,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
 	title: 'Crear Cuenta',
 	description:
-		'Crea tu cuenta gratuita en CutForge. Cotiza al instante tus proyectos de corte láser y CNC sin mínimos de pedido.',
+		'Crea tu cuenta gratuita en ClicknCut. Cotiza al instante tus proyectos de corte láser y CNC sin mínimos de pedido.',
 	robots: {
 		index: true,
 		follow: true,
@@ -34,7 +34,7 @@ export default function SignUpPage() {
 							<Link href='/' className='inline-block'>
 								<Image
 									src='/images/logo.png'
-									alt='CutForge'
+									alt='ClicknCut'
 									width={180}
 									height={45}
 									className='h-24 w-auto mx-auto'
@@ -43,7 +43,7 @@ export default function SignUpPage() {
 						</div>
 						<CardTitle className='text-2xl'>Crear Cuenta</CardTitle>
 						<CardDescription>
-							Únete a CutForge y convierte tus diseños en realidad
+							Únete a ClicknCut y convierte tus diseños en realidad
 						</CardDescription>
 					</CardHeader>
 					<CardContent className='space-y-6'>
