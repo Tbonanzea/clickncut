@@ -7,7 +7,7 @@ export function LocalBusinessJsonLd() {
 		'@id': `${baseUrl}/#business`,
 		name: 'ClicknCut',
 		description:
-			'Plataforma de corte láser y CNC personalizado. Servicios de corte de precisión en metal, acrílico, MDF y más materiales.',
+			'Plataforma de corte láser personalizado. Servicios de corte de precisión en metal, acrílico, MDF y más materiales.',
 		url: baseUrl,
 		logo: `${baseUrl}/logo.png`,
 		image: `${baseUrl}/og-image.png`,
@@ -62,14 +62,6 @@ export function LocalBusinessJsonLd() {
 					'@type': 'Offer',
 					itemOffered: {
 						'@type': 'Service',
-						name: 'Corte CNC',
-						description: 'Corte CNC para piezas de mayor espesor',
-					},
-				},
-				{
-					'@type': 'Offer',
-					itemOffered: {
-						'@type': 'Service',
 						name: 'Grabado Láser',
 						description: 'Grabado y marcado láser personalizado',
 					},
@@ -100,7 +92,7 @@ export function WebsiteJsonLd() {
 		'@id': `${baseUrl}/#website`,
 		url: baseUrl,
 		name: 'ClicknCut',
-		description: 'Plataforma de corte láser y CNC personalizado',
+		description: 'Plataforma de corte láser personalizado',
 		publisher: {
 			'@id': `${baseUrl}/#business`,
 		},

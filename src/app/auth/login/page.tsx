@@ -13,7 +13,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
 	title: 'Iniciar Sesión',
 	description:
-		'Accede a tu cuenta de ClicknCut para cotizar y gestionar tus pedidos de corte láser y CNC.',
+		'Accede a tu cuenta de ClicknCut para cotizar y gestionar tus pedidos de corte láser.',
 	robots: {
 		index: true,
 		follow: true,

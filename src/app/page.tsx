@@ -41,7 +41,7 @@ export default function Home() {
 								</Badge>
 
 								<h1 className='text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground'>
-									Corte láser y CNC{' '}
+									Corte láser{' '}
 									<span className='text-secondary'>
 										para makers
 									</span>

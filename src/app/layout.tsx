@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 		process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com',
 	),
 	title: {
-		default: 'ClicknCut - Corte Láser y CNC Personalizado',
+		default: 'ClicknCut - Corte Láser Personalizado',
 		template: '%s | ClicknCut',
 	},
 	description:
-		'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+		'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	keywords: [
 		'corte láser',
-		'CNC',
 		'corte personalizado',
 		'DXF',
 		'metal',
 		'acrílico',
+		'MDF',
 		'fabricación',
 	],
 	authors: [{ name: 'ClicknCut' }],
@@ -45,15 +45,15 @@ export const metadata: Metadata = {
 		type: 'website',
 		locale: 'es_AR',
 		siteName: 'ClicknCut',
-		title: 'ClicknCut - Corte Láser y CNC Personalizado',
+		title: 'ClicknCut - Corte Láser Personalizado',
 		description:
-			'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+			'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	},
 	twitter: {
 		card: 'summary_large_image',
-		title: 'ClicknCut - Corte Láser y CNC Personalizado',
+		title: 'ClicknCut - Corte Láser Personalizado',
 		description:
-			'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+			'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	},
 	robots: {
 		index: true,

@@ -17,7 +17,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
 	title: 'Acerca de ClicknCut',
 	description:
-		'Conoce ClicknCut: la plataforma de corte láser y CNC diseñada para makers. Cotización instantánea, calidad industrial, entrega rápida.',
+		'Conoce ClicknCut: la plataforma de corte láser diseñada para makers. Cotización instantánea, calidad industrial, entrega rápida.',
 };
 
 export default function AboutPage() {
@@ -55,7 +55,7 @@ export default function AboutPage() {
 							</h2>
 							<div className='space-y-4 text-muted-foreground'>
 								<p>
-									Durante años, el corte láser y CNC fue exclusivo de grandes
+									Durante años, el corte láser fue exclusivo de grandes
 									empresas con presupuestos enormes y pedidos mínimos de cientos
 									de piezas.
 								</p>

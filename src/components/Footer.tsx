@@ -19,7 +19,7 @@ export default function Footer() {
 							/>
 						</Link>
 						<p className='text-sm text-primary-foreground/80 leading-relaxed'>
-							Plataforma de corte láser y CNC para makers. Tu diseño convertido
+							Plataforma de corte láser para makers. Tu diseño convertido
 							en realidad con precisión industrial.
 						</p>
 					</div>
@@ -78,7 +78,7 @@ export default function Footer() {
 							</li>
 							<li>
 								<span className='text-sm text-primary-foreground/80'>
-									Corte CNC
+									Corte a medida
 								</span>
 							</li>
 							<li>

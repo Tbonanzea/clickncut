@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'ClicknCut - Corte Láser y CNC Personalizado';
+export const alt = 'ClicknCut - Corte Láser Personalizado';
 export const size = {
 	width: 1200,
 	height: 630,
@@ -81,7 +81,7 @@ export default async function TwitterImage() {
 						lineHeight: 1.3,
 					}}
 				>
-					Corte Láser y CNC Personalizado
+					Corte Láser Personalizado
 				</div>
 
 				{/* Features */}
