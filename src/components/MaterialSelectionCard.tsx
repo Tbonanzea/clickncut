@@ -18,6 +18,7 @@ import {
 	Scissors,
 	Target,
 	Trash2,
+	Weight,
 } from 'lucide-react';
 import DXFViewerToggle from './DXFViewerToggle';
 
@@ -199,6 +200,20 @@ export default function MaterialSelectionCard({
 										</span>
 									</div>
 								)}
+								{item.file._pieceAreaMm2 != null && item.materialType && (
+									<div className='flex items-center gap-1.5'>
+										<Weight className='h-3 w-3' />
+										<span>
+											Peso estimado:{' '}
+											{(
+												(item.file._pieceAreaMm2 /
+													(item.materialType.width * item.materialType.length)) *
+												item.materialType.massPerUnit
+											).toFixed(3)}{' '}
+											kg
+										</span>
+									</div>
+								)}
 							</div>
 						)}
 					</div>
@@ -330,10 +345,8 @@ export default function MaterialSelectionCard({
 										{breakdown.totalCuttingTimeMin > 0 && (
 											<p className='text-xs text-muted-foreground mt-1'>
 												Tiempo de corte:{' '}
-												{breakdown.totalCuttingTimeMin.toFixed(
-													2,
-												)}{' '}
-												min
+												{Math.floor(breakdown.totalCuttingTimeMin)}m{' '}
+												{Math.round((breakdown.totalCuttingTimeMin % 1) * 60)}s
 											</p>
 										)}
 									</>

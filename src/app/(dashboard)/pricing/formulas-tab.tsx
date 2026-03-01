@@ -75,13 +75,21 @@ const formulas: FormulaRow[] = [
 	},
 	{
 		step: 8,
+		name: 'Peso de la pieza',
+		description:
+			'Peso estimado de una pieza, proporcional al área real respecto a la chapa completa.',
+		formula: '(pieceAreaMm2 / (Ancho chapa × Largo chapa)) × Peso chapa',
+		code: '(pieceAreaMm2 / (sheetWidth × sheetLength)) × massPerUnit',
+	},
+	{
+		step: 9,
 		name: 'Área de la chapa',
 		description: 'Área total de una chapa entera en cm².',
 		formula: '(Ancho chapa × Largo chapa) / 100',
 		code: 'sheetAreaCm2 = (sheetWidth × sheetLength) / 100',
 	},
 	{
-		step: 9,
+		step: 10,
 		name: 'Costo de material',
 		description:
 			'Fracción de chapa que usa la pieza × precio de la chapa, con un % extra por desperdicio.',
@@ -89,7 +97,7 @@ const formulas: FormulaRow[] = [
 		code: '(pieceAreaCm2 / sheetAreaCm2) × pricePerUnit × (1 + materialWasteFactor)',
 	},
 	{
-		step: 10,
+		step: 11,
 		name: 'Costos fijos / minuto',
 		description:
 			'Los gastos fijos mensuales (alquiler, sueldos, etc.) repartidos entre los minutos productivos reales.',
@@ -97,7 +105,7 @@ const formulas: FormulaRow[] = [
 		code: 'fixedCosts / (prodHours × 60 × efficiency)',
 	},
 	{
-		step: 11,
+		step: 12,
 		name: 'Amortización / minuto',
 		description:
 			'El valor de la máquina amortizado en cuotas mensuales, repartido entre los minutos productivos.',
@@ -105,7 +113,7 @@ const formulas: FormulaRow[] = [
 		code: '(machUsd × rate / years / 12) / (hrs × 60 × eff)',
 	},
 	{
-		step: 12,
+		step: 13,
 		name: 'Costos imputados',
 		description:
 			'Tiempo total × (costo fijo/min + amortización/min). Cada pieza absorbe su parte proporcional.',
@@ -113,7 +121,7 @@ const formulas: FormulaRow[] = [
 		code: 'totalTime × (fixedPerMin + amortPerMin)',
 	},
 	{
-		step: 13,
+		step: 14,
 		name: 'Programación y setup',
 		description:
 			'Costo fijo por pieza: preparación del programa CAD/CAM + calibración de máquina.',
@@ -121,7 +129,7 @@ const formulas: FormulaRow[] = [
 		code: 'programmingCost + setupCost',
 	},
 	{
-		step: 14,
+		step: 15,
 		name: 'Peso y envíos',
 		description:
 			'Peso estimado del pedido. Si supera el máximo por envío, se divide en varios.',
@@ -129,7 +137,7 @@ const formulas: FormulaRow[] = [
 		code: 'weight = pieceWt × qty; shipments = ceil(wt / maxKg)',
 	},
 	{
-		step: 15,
+		step: 16,
 		name: 'Logística / pieza',
 		description:
 			'Embalaje + despacho + flete, multiplicado por cantidad de envíos y dividido entre las piezas.',
@@ -137,7 +145,7 @@ const formulas: FormulaRow[] = [
 		code: 'ships × (pack + dispatch + ship) / qty',
 	},
 	{
-		step: 16,
+		step: 17,
 		name: 'Costo total / pieza',
 		description:
 			'Suma de todos los costos: gas + energía + consumibles + material + fijos + amortización + servicios + logística.',
@@ -145,7 +153,7 @@ const formulas: FormulaRow[] = [
 		code: 'gas + energy + consum + mat + fixed + amort + prog + setup + pack + disp + ship',
 	},
 	{
-		step: 17,
+		step: 18,
 		name: 'Ganancia',
 		description:
 			'Margen sobre precio de venta (ej: 35% significa que la ganancia es el 35% del precio final).',
@@ -153,7 +161,7 @@ const formulas: FormulaRow[] = [
 		code: 'totalCostPerPiece × profitMargin / (1 - profitMargin)',
 	},
 	{
-		step: 18,
+		step: 19,
 		name: 'Descuento volumen',
 		description:
 			'Si la cantidad cae en un rango con descuento, se aplica sobre (costo + ganancia). Valor negativo.',
@@ -161,7 +169,7 @@ const formulas: FormulaRow[] = [
 		code: '-(totalCost + profit) × discountRate',
 	},
 	{
-		step: 19,
+		step: 20,
 		name: 'Recargo urgencia',
 		description:
 			'Si es urgente (<24h), recargo porcentual sobre (costo + ganancia).',
@@ -169,7 +177,7 @@ const formulas: FormulaRow[] = [
 		code: '(totalCost + profit) × urgencySurcharge',
 	},
 	{
-		step: 20,
+		step: 21,
 		name: 'Subtotal / pieza',
 		description:
 			'Subtotal por pieza antes de comisión de pago: costo + ganancia - descuento + urgencia.',
@@ -177,7 +185,7 @@ const formulas: FormulaRow[] = [
 		code: 'totalCostPerPiece + profitPerPiece + volumeDiscount + urgencySurchargeAmount',
 	},
 	{
-		step: 21,
+		step: 22,
 		name: 'Comisión MercadoPago',
 		description:
 			'Se ajusta el precio para absorber la comisión de MercadoPago (ej: 6%), de modo que después del descuento de MP se recibe el subtotal deseado.',
@@ -185,7 +193,7 @@ const formulas: FormulaRow[] = [
 		code: 'unitSalePrice = subtotalPerPiece / (1 - paymentCommission)',
 	},
 	{
-		step: 22,
+		step: 23,
 		name: 'Precio total',
 		description: 'Precio unitario multiplicado por la cantidad de piezas.',
 		formula: 'Precio unit. × Cantidad',
