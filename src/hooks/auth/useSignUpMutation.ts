@@ -1,7 +1,6 @@
 'use client';
 
-import { signup } from '@/app/auth/actions';
-import { User } from '@/generated/prisma/browser';
+import { signup, AuthResponse } from '@/app/auth/actions';
 import { useMutation } from '@tanstack/react-query';
 
 export type SignUpData = {
@@ -9,19 +8,12 @@ export type SignUpData = {
 	password: string;
 };
 
-type SignUpResponse = {
-	success: boolean;
-	user: User;
-};
-
-async function signUpApiCall(data: SignUpData): Promise<SignUpResponse> {
+async function signUpApiCall(data: SignUpData): Promise<AuthResponse> {
 	const response = await signup(data);
-	if (!response.success || !response.user) {
-		const errorResponse = response.error;
-		throw new Error(errorResponse.error || 'Error al crear usuario');
+	if (!response.success) {
+		throw new Error(response.error);
 	}
-
-	return { success: response.success, user: response.user };
+	return response;
 }
 
 export function useSignUpMutation() {

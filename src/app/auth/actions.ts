@@ -12,13 +12,19 @@ import { redirect } from 'next/navigation';
 
 const supabaseErrorMessages: Record<string, string> = {
 	'Invalid login credentials': 'Email o contraseña incorrectos.',
-	'Email not confirmed': 'Tu email no ha sido verificado. Revisa tu bandeja de entrada.',
+	'Email not confirmed':
+		'Tu email no ha sido verificado. Revisa tu bandeja de entrada.',
 	'User already registered': 'Ya existe una cuenta con este email.',
-	'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres.',
-	'Email rate limit exceeded': 'Demasiados intentos. Intenta de nuevo en unos minutos.',
-	'For security purposes, you can only request this after': 'Por seguridad, debes esperar antes de intentar de nuevo.',
-	'New password should be different from the old password.': 'La nueva contraseña debe ser diferente a la anterior.',
-	'Auth session missing!': 'Tu sesion ha expirado. Inicia sesion de nuevo.',
+	'Password should be at least 6 characters':
+		'La contraseña debe tener al menos 6 caracteres.',
+	'Email rate limit exceeded':
+		'Demasiados intentos. Intenta de nuevo en unos minutos.',
+	'For security purposes, you can only request this after':
+		'Por seguridad, debes esperar antes de intentar de nuevo.',
+	'New password should be different from the old password.':
+		'La nueva contraseña debe ser diferente a la anterior.',
+	'Auth session missing!':
+		'Tu sesion ha expirado. Inicia sesion de nuevo.',
 };
 
 function translateSupabaseError(message: string): string {
@@ -28,7 +34,15 @@ function translateSupabaseError(message: string): string {
 	return message;
 }
 
-export async function signup(formData: SignUpData) {
+export type AuthResponse<T = unknown> = {
+	success: true;
+	data: T;
+} | {
+	success: false;
+	error: string;
+};
+
+export async function signup(formData: SignUpData): Promise<AuthResponse> {
 	const { user } = await getUserByEmail(formData.email);
 	if (user) {
 		const isLocalAuthProvider = user.authProviders.includes(
@@ -36,15 +50,16 @@ export async function signup(formData: SignUpData) {
 		);
 
 		if (isLocalAuthProvider) {
-			throw new Error('Ya existe una cuenta con este email.');
+			return { success: false, error: 'Ya existe una cuenta con este email.' };
 		}
 
 		const providers = user.authProviders
 			.filter((p) => p !== AuthProvider.EMAIL)
 			.join(', ');
-		throw new Error(
-			`Ya existe una cuenta con este email registrada con ${providers}. Inicia sesion con ese metodo.`
-		);
+		return {
+			success: false,
+			error: `Ya existe una cuenta con este email registrada con ${providers}. Inicia sesion con ese metodo.`,
+		};
 	}
 
 	const supabase = await createClient();
@@ -56,11 +71,11 @@ export async function signup(formData: SignUpData) {
 	});
 
 	if (error) {
-		throw new Error(translateSupabaseError(error.message));
+		return { success: false, error: translateSupabaseError(error.message) };
 	}
 
 	if (!data?.user) {
-		throw new Error('No se pudo crear la cuenta. Intenta de nuevo.');
+		return { success: false, error: 'No se pudo crear la cuenta. Intenta de nuevo.' };
 	}
 
 	const newUserResponse = await createUser({
@@ -69,7 +84,7 @@ export async function signup(formData: SignUpData) {
 		authProviders: [AuthProvider.EMAIL],
 	});
 
-	return newUserResponse;
+	return { success: true, data: newUserResponse };
 }
 
 const signInWithProvider = async (provider: Provider) => {
@@ -103,7 +118,7 @@ export const signOut = async () => {
 export async function newPassword({
 	newPassword,
 	emailRedirectTo,
-}: NewPasswordData) {
+}: NewPasswordData): Promise<AuthResponse> {
 	const supabase = await createClient();
 
 	const { data, error } = await supabase.auth.updateUser({
@@ -111,17 +126,17 @@ export async function newPassword({
 	});
 
 	if (error) {
-		throw new Error(translateSupabaseError(error.message));
+		return { success: false, error: translateSupabaseError(error.message) };
 	}
 
 	if (data.user && emailRedirectTo) {
 		redirect(emailRedirectTo);
 	}
 
-	return data;
+	return { success: true, data };
 }
 
-export async function login(formData: LogInData) {
+export async function login(formData: LogInData): Promise<AuthResponse> {
 	const supabase = await createClient();
 
 	const { data, error } = await supabase.auth.signInWithPassword(formData);
@@ -132,22 +147,23 @@ export async function login(formData: LogInData) {
 		});
 
 		if (!user) {
-			throw new Error('No existe una cuenta con este email.');
+			return { success: false, error: 'No existe una cuenta con este email.' };
 		}
 
 		if (!user.authProviders.includes(AuthProvider.EMAIL)) {
 			const providers = user.authProviders
 				.filter((p) => p !== AuthProvider.EMAIL)
 				.join(', ');
-			throw new Error(
-				`Esta cuenta fue creada con ${providers}. Inicia sesion con ese metodo.`
-			);
+			return {
+				success: false,
+				error: `Esta cuenta fue creada con ${providers}. Inicia sesion con ese metodo.`,
+			};
 		}
 
-		throw new Error(translateSupabaseError(error.message));
+		return { success: false, error: translateSupabaseError(error.message) };
 	}
 
-	return data;
+	return { success: true, data };
 }
 
 export async function requestResetPassword(email: string) {

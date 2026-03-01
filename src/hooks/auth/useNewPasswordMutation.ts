@@ -1,6 +1,6 @@
 'use client';
 
-import { newPassword } from '@/app/auth/actions';
+import { newPassword, AuthResponse } from '@/app/auth/actions';
 import { useMutation } from '@tanstack/react-query';
 
 export type NewPasswordData = {
@@ -8,14 +8,12 @@ export type NewPasswordData = {
 	emailRedirectTo: string;
 };
 
-type NewPasswordResponse = boolean;
-
-async function newPasswordApiCall(
-	data: NewPasswordData
-): Promise<NewPasswordResponse> {
-	await newPassword(data);
-
-	return true;
+async function newPasswordApiCall(data: NewPasswordData): Promise<AuthResponse> {
+	const response = await newPassword(data);
+	if (!response.success) {
+		throw new Error(response.error);
+	}
+	return response;
 }
 
 export function useNewPasswordMutation() {
