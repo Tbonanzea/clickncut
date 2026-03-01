@@ -40,9 +40,7 @@ export default function LogInForm() {
 		mutate: logIn,
 		isPending,
 		isError,
-		isSuccess,
 		error,
-		data,
 	} = useLogInMutation();
 
 	const onSubmit = (formData: LoginFormData) => {
@@ -123,12 +121,7 @@ export default function LogInForm() {
 						{(error as Error).message}
 					</p>
 				)}
-				{isSuccess && (
-					<p className='text-success mt-2'>
-						{JSON.stringify(data)}
-					</p>
-				)}
-			</form>
+				</form>
 		</Form>
 	);
 }
