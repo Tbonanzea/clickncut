@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import { formatPrice } from '@/lib/format';
 
 export const metadata: Metadata = {
 	title: 'Configuración de Precios',
@@ -58,10 +59,7 @@ export default async function PricingPage() {
 						Costos fijos / mes
 					</p>
 					<p className='text-xl font-bold font-mono mt-1'>
-						$
-						{totalFixedCost.toLocaleString('es-AR', {
-							maximumFractionDigits: 0,
-						})}
+						{formatPrice(totalFixedCost)}
 					</p>
 				</div>
 				<div className='p-4 bg-muted/50 border rounded-lg'>
@@ -69,10 +67,7 @@ export default async function PricingPage() {
 						Amortización / mes
 					</p>
 					<p className='text-xl font-bold font-mono mt-1'>
-						$
-						{monthlyAmortization.toLocaleString('es-AR', {
-							maximumFractionDigits: 0,
-						})}
+						{formatPrice(monthlyAmortization)}
 					</p>
 				</div>
 				<div className='p-4 bg-muted/50 border rounded-lg'>

@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getStatusVariant, getStatusLabel } from '@/lib/status-utils';
+import { formatPrice } from '@/lib/format';
 
 export const metadata: Metadata = {
 	title: 'Dashboard',
@@ -68,14 +69,10 @@ export default async function DashboardPage() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold">
-							${metrics.totalRevenue.toLocaleString('es-AR', {
-								minimumFractionDigits: 2,
-							})}
+							{formatPrice(metrics.totalRevenue, 2)}
 						</div>
 						<p className="text-xs text-success mt-1">
-							+${metrics.revenueThisMonth.toLocaleString('es-AR', {
-								minimumFractionDigits: 2,
-							})}{' '}
+							+{formatPrice(metrics.revenueThisMonth, 2)}{' '}
 							este mes
 						</p>
 					</CardContent>
@@ -161,9 +158,7 @@ export default async function DashboardPage() {
 									Ingresos del Mes
 								</p>
 								<p className="text-2xl font-bold text-success">
-									${metrics.revenueThisMonth.toLocaleString('es-AR', {
-										minimumFractionDigits: 0,
-									})}
+									{formatPrice(metrics.revenueThisMonth)}
 								</p>
 							</div>
 						</div>
@@ -220,9 +215,7 @@ export default async function DashboardPage() {
 											</Badge>
 										</TableCell>
 										<TableCell className="text-right font-semibold">
-											${order.totalPrice.toLocaleString('es-AR', {
-												minimumFractionDigits: 2,
-											})}
+											{formatPrice(order.totalPrice, 2)}
 										</TableCell>
 										<TableCell className="text-muted-foreground text-sm">
 											{formatDistanceToNow(new Date(order.createdAt), {

@@ -18,7 +18,7 @@ import { useEffect } from 'react';
 import type { PricingBreakdown } from '@/lib/pricing-engine';
 
 export default function MaterialSelectionPage() {
-	const { cart, updateItem, validateCurrentStep, nextStep, prevStep } =
+	const { cart, updateItem, removeItem, validateCurrentStep, nextStep, prevStep } =
 		useQuoting();
 	const { data: materials, isLoading, error } = useMaterials();
 	const {
@@ -192,6 +192,7 @@ export default function MaterialSelectionPage() {
 								onMaterialChange={handleMaterialChange}
 								onMaterialTypeChange={handleMaterialTypeChange}
 								onQuantityChange={handleQuantityChange}
+								onRemove={removeItem}
 								breakdown={getBreakdown(idx)}
 								loadingPrice={loadingPrices}
 							/>

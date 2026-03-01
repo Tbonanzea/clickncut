@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatPrice } from '@/lib/format';
 
 const statusColors: Record<OrderStatus, string> = {
 	PENDING: 'bg-yellow-100 text-yellow-800',
@@ -317,7 +318,7 @@ export default function OrderDetailPage() {
 						<div>
 							<span className="text-sm text-muted-foreground">Total</span>
 							<p className="text-3xl font-bold text-success">
-								${order.totalPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+								{formatPrice(order.totalPrice, 2)}
 							</p>
 						</div>
 					</CardContent>
@@ -380,12 +381,10 @@ export default function OrderDetailPage() {
 									</TableCell>
 									<TableCell className="text-center">{item.quantity}</TableCell>
 									<TableCell className="text-right">
-										${item.price.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+										{formatPrice(item.price, 2)}
 									</TableCell>
 									<TableCell className="text-right font-semibold">
-										${(item.price * item.quantity).toLocaleString('es-AR', {
-											minimumFractionDigits: 2,
-										})}
+										{formatPrice(item.price * item.quantity, 2)}
 									</TableCell>
 								</TableRow>
 							))}
@@ -399,18 +398,14 @@ export default function OrderDetailPage() {
 							<div className="flex justify-between text-sm">
 								<span className="text-muted-foreground">Subtotal</span>
 								<span>
-									${order.totalPrice.toLocaleString('es-AR', {
-										minimumFractionDigits: 2,
-									})}
+									{formatPrice(order.totalPrice, 2)}
 								</span>
 							</div>
 							<Separator />
 							<div className="flex justify-between font-bold text-lg">
 								<span>Total</span>
 								<span className="text-success">
-									${order.totalPrice.toLocaleString('es-AR', {
-										minimumFractionDigits: 2,
-									})}
+									{formatPrice(order.totalPrice, 2)}
 								</span>
 							</div>
 						</div>
@@ -445,7 +440,7 @@ export default function OrderDetailPage() {
 												{getPaymentMethodLabel(payment.paymentMethod)}
 											</p>
 											<p className="text-sm text-muted-foreground">
-												${payment.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+												{formatPrice(payment.amount, 2)}
 											</p>
 											{payment.paidAt && (
 												<p className="text-xs text-gray-400">
@@ -503,7 +498,7 @@ export default function OrderDetailPage() {
 								<div key={extra.id} className="flex justify-between items-center p-3 bg-muted rounded">
 									<span>{extra.extraService.name}</span>
 									<span className="font-medium">
-										${extra.priceAtOrder.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+										{formatPrice(extra.priceAtOrder, 2)}
 									</span>
 								</div>
 							))}

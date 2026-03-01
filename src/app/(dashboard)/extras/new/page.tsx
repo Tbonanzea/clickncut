@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { createExtraService } from '../actions';
+import { PriceInput } from '@/components/ui/price-input';
+import { parseFormattedNumber } from '@/lib/format';
 
 export default function NewExtraPage() {
 	const router = useRouter();
@@ -24,7 +26,7 @@ export default function NewExtraPage() {
 		const data = {
 			name: formData.get('name') as string,
 			description: formData.get('description') as string,
-			price: parseFloat(formData.get('price') as string),
+			price: parseFormattedNumber(formData.get('price') as string),
 			unit: formData.get('unit') as string,
 		};
 
@@ -83,13 +85,10 @@ export default function NewExtraPage() {
 						<div className="grid grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label htmlFor="price">Precio ($) *</Label>
-								<Input
+								<PriceInput
 									id="price"
 									name="price"
-									type="number"
-									step="0.01"
-									min="0"
-									placeholder="0.00"
+									placeholder="0"
 									required
 								/>
 							</div>

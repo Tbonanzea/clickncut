@@ -11,6 +11,8 @@ import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
 import { getExtraServiceById, updateExtraService } from '../actions';
 import { ExtraService } from '@/generated/prisma/browser';
+import { PriceInput } from '@/components/ui/price-input';
+import { parseFormattedNumber } from '@/lib/format';
 
 export default function EditExtraPage() {
 	const params = useParams();
@@ -40,7 +42,7 @@ export default function EditExtraPage() {
 		const data = {
 			name: formData.get('name') as string,
 			description: formData.get('description') as string,
-			price: parseFloat(formData.get('price') as string),
+			price: parseFormattedNumber(formData.get('price') as string),
 			unit: formData.get('unit') as string,
 			isActive: formData.get('isActive') === 'on',
 		};
@@ -123,12 +125,9 @@ export default function EditExtraPage() {
 						<div className="grid grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label htmlFor="price">Precio ($) *</Label>
-								<Input
+								<PriceInput
 									id="price"
 									name="price"
-									type="number"
-									step="0.01"
-									min="0"
 									defaultValue={extra.price}
 									required
 								/>

@@ -22,6 +22,8 @@ import {
 	Truck,
 	Trash2,
 } from 'lucide-react';
+import { PriceInput } from '@/components/ui/price-input';
+import { formatPrice } from '@/lib/format';
 import { upsertPricingConfig } from './actions';
 
 interface PricingConfig {
@@ -89,12 +91,14 @@ function Field({
 	onChange,
 	suffix,
 	step,
+	currency,
 }: {
 	label: string;
 	value: string;
 	onChange: (v: string) => void;
 	suffix?: string;
 	step?: string;
+	currency?: boolean;
 }) {
 	return (
 		<div className='space-y-1.5'>
@@ -102,13 +106,21 @@ function Field({
 				{label}
 			</Label>
 			<div className='flex items-center gap-1.5'>
-				<Input
-					type='number'
-					value={value}
-					onChange={(e) => onChange(e.target.value)}
-					step={step}
-					className='font-mono h-9 text-sm'
-				/>
+				{currency ? (
+					<PriceInput
+						value={value}
+						onValueChange={onChange}
+						className='font-mono h-9 text-sm'
+					/>
+				) : (
+					<Input
+						type='number'
+						value={value}
+						onChange={(e) => onChange(e.target.value)}
+						step={step}
+						className='font-mono h-9 text-sm'
+					/>
+				)}
 				{suffix && (
 					<span className='text-xs text-muted-foreground whitespace-nowrap min-w-fit'>
 						{suffix}
@@ -134,14 +146,7 @@ function DerivedValue({
 	);
 }
 
-function formatARS(value: number): string {
-	return (
-		'$' +
-		value.toLocaleString('es-AR', {
-			maximumFractionDigits: 0,
-		})
-	);
-}
+const formatARS = formatPrice;
 
 export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 	const [isPending, startTransition] = useTransition();
@@ -309,12 +314,14 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 					<CardContent className='space-y-3'>
 						<div className='grid grid-cols-2 gap-3'>
 							<Field
+								currency
 								label='Tipo de cambio USD → ARS'
 								value={form.usdToArsRate}
 								onChange={updateField('usdToArsRate')}
 								suffix='$/USD'
 							/>
 							<Field
+								currency
 								label='Valor máquina'
 								value={form.machineValueUsd}
 								onChange={updateField('machineValueUsd')}
@@ -352,6 +359,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 								step='0.1'
 							/>
 							<Field
+								currency
 								label='Costo energía'
 								value={form.energyCostPerKwh}
 								onChange={updateField('energyCostPerKwh')}
@@ -372,12 +380,14 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 					<CardContent>
 						<div className='grid grid-cols-2 gap-3'>
 							<Field
+								currency
 								label='Costo oxígeno'
 								value={form.oxygenCostPerM3}
 								onChange={updateField('oxygenCostPerM3')}
 								suffix='$/m³'
 							/>
 							<Field
+								currency
 								label='Costo nitrógeno'
 								value={form.nitrogenCostPerM3}
 								onChange={updateField('nitrogenCostPerM3')}
@@ -398,6 +408,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 					<CardContent className='space-y-3'>
 						<div className='grid grid-cols-2 gap-3'>
 							<Field
+								currency
 								label='Costo lente'
 								value={form.lensCost}
 								onChange={updateField('lensCost')}
@@ -410,6 +421,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 								suffix='hrs'
 							/>
 							<Field
+								currency
 								label='Costo boquilla'
 								value={form.nozzleCost}
 								onChange={updateField('nozzleCost')}
@@ -440,12 +452,14 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 					<CardContent>
 						<div className='grid grid-cols-2 gap-3'>
 							<Field
+								currency
 								label='Programación CAD/CAM'
 								value={form.programmingCostPerPiece}
 								onChange={updateField('programmingCostPerPiece')}
 								suffix='$/pieza'
 							/>
 							<Field
+								currency
 								label='Setup y calibración'
 								value={form.setupCostPerPiece}
 								onChange={updateField('setupCostPerPiece')}
@@ -466,18 +480,21 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 					<CardContent>
 						<div className='grid grid-cols-3 gap-3'>
 							<Field
+								currency
 								label='Embalaje'
 								value={form.packagingCostPerShipment}
 								onChange={updateField('packagingCostPerShipment')}
 								suffix='$/envío'
 							/>
 							<Field
+								currency
 								label='Despacho'
 								value={form.dispatchCostPerOrder}
 								onChange={updateField('dispatchCostPerOrder')}
 								suffix='$/pedido'
 							/>
 							<Field
+								currency
 								label='Flete'
 								value={form.shippingCostPerOrder}
 								onChange={updateField('shippingCostPerOrder')}

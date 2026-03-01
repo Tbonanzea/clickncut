@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/prisma';
+import { formatPrice } from '@/lib/format';
 
 export const metadata: Metadata = {
 	title: 'Extras',
@@ -101,13 +102,12 @@ export default async function ExtrasPage({
 							<div>
 								<span className="text-muted-foreground">Precio promedio:</span>
 								<p className="font-semibold">
-									$
 									{extras.length > 0
-										? (
+										? formatPrice(
 												extras.reduce((sum, e) => sum + e.price, 0) /
 												extras.length
-										  ).toLocaleString('es-AR', { maximumFractionDigits: 0 })
-										: 0}
+										  )
+										: '$0'}
 								</p>
 							</div>
 						</div>

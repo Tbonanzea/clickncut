@@ -13,6 +13,8 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Save, X } from 'lucide-react';
+import { PriceInput } from '@/components/ui/price-input';
+import { formatPrice } from '@/lib/format';
 import {
 	createFixedCost,
 	updateFixedCost,
@@ -186,12 +188,9 @@ export function FixedCostsTab({ fixedCosts }: FixedCostsTabProps) {
 									/>
 								</TableCell>
 								<TableCell>
-									<Input
-										type='number'
+									<PriceInput
 										value={newMonthlyCost}
-										onChange={(e) =>
-											setNewMonthlyCost(e.target.value)
-										}
+										onValueChange={setNewMonthlyCost}
 										placeholder='0'
 										className='text-right h-8 text-sm font-mono'
 									/>
@@ -253,14 +252,9 @@ export function FixedCostsTab({ fixedCosts }: FixedCostsTabProps) {
 											/>
 										</TableCell>
 										<TableCell>
-											<Input
-												type='number'
+											<PriceInput
 												value={editMonthlyCost}
-												onChange={(e) =>
-													setEditMonthlyCost(
-														e.target.value
-													)
-												}
+												onValueChange={setEditMonthlyCost}
 												className='text-right h-8 text-sm font-mono'
 											/>
 										</TableCell>
@@ -298,13 +292,7 @@ export function FixedCostsTab({ fixedCosts }: FixedCostsTabProps) {
 											{fc.description || '—'}
 										</TableCell>
 										<TableCell className='text-right font-mono text-sm'>
-											$
-											{fc.monthlyCost.toLocaleString(
-												'es-AR',
-												{
-													maximumFractionDigits: 0,
-												}
-											)}
+											{formatPrice(fc.monthlyCost)}
 										</TableCell>
 										<TableCell className='text-center'>
 											<Switch
@@ -363,10 +351,7 @@ export function FixedCostsTab({ fixedCosts }: FixedCostsTabProps) {
 					Total mensual (activos)
 				</span>
 				<span className='text-lg font-bold font-mono'>
-					$
-					{totalActive.toLocaleString('es-AR', {
-						maximumFractionDigits: 0,
-					})}
+					{formatPrice(totalActive)}
 				</span>
 			</div>
 		</div>

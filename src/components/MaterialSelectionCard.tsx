@@ -17,6 +17,7 @@ import {
 	Ruler,
 	Scissors,
 	Target,
+	Trash2,
 } from 'lucide-react';
 import DXFViewerToggle from './DXFViewerToggle';
 
@@ -31,6 +32,7 @@ interface MaterialSelectionCardProps {
 		typeId: string,
 	) => void;
 	onQuantityChange: (index: number, quantity: number) => void;
+	onRemove: (index: number) => void;
 	breakdown?: PricingBreakdown;
 	loadingPrice?: boolean;
 }
@@ -52,6 +54,7 @@ export default function MaterialSelectionCard({
 	onMaterialChange,
 	onMaterialTypeChange,
 	onQuantityChange,
+	onRemove,
 	breakdown,
 	loadingPrice,
 }: MaterialSelectionCardProps) {
@@ -99,38 +102,49 @@ export default function MaterialSelectionCard({
 			value={`item-${index}`}
 			className='border rounded-lg mb-4'
 		>
-			<AccordionTrigger className='px-4 hover:no-underline hover:bg-muted/50'>
-				<div className='flex items-center gap-3 w-full'>
-					{isComplete && sizeWarnings.length === 0 ? (
-						<CheckCircle2 className='h-5 w-5 text-success shrink-0' />
-					) : (
-						<AlertCircle
-							className={`h-5 w-5 shrink-0 ${sizeWarnings.length > 0 ? 'text-destructive' : 'text-warning'}`}
-						/>
-					)}
-					<div className='flex-1 text-left'>
-						<p className='font-semibold'>{item.file.filename}</p>
-						{item.material && item.materialType ? (
-							<p className='text-sm text-muted-foreground'>
-								{item.material.name} -{' '}
-								{item.materialType.height}mm
-								{item.materialType.finish &&
-									` (${item.materialType.finish})`}
-								{item.quantity > 1 && ` × ${item.quantity}`}
-								{breakdown && (
-									<span className='ml-2 text-success font-medium'>
-										{formatARS(breakdown.totalOrderPrice)}
-									</span>
-								)}
-							</p>
+			<div className='flex items-center [&>:first-child]:flex-1'>
+				<AccordionTrigger className='flex-1 px-4 hover:no-underline hover:bg-muted/50'>
+					<div className='flex items-center gap-3 w-full'>
+						{isComplete && sizeWarnings.length === 0 ? (
+							<CheckCircle2 className='h-5 w-5 text-success shrink-0' />
 						) : (
-							<p className='text-sm text-warning'>
-								Selecciona material y espesor
-							</p>
+							<AlertCircle
+								className={`h-5 w-5 shrink-0 ${sizeWarnings.length > 0 ? 'text-destructive' : 'text-warning'}`}
+							/>
 						)}
+						<div className='flex-1 text-left'>
+							<p className='font-semibold'>{item.file.filename}</p>
+							{item.material && item.materialType ? (
+								<p className='text-sm text-muted-foreground'>
+									{item.material.name} -{' '}
+									{item.materialType.height}mm
+									{item.materialType.finish &&
+										` (${item.materialType.finish})`}
+									{item.quantity > 1 && ` × ${item.quantity}`}
+									{breakdown && (
+										<span className='ml-2 text-success font-medium'>
+											{formatARS(breakdown.totalOrderPrice)}
+										</span>
+									)}
+								</p>
+							) : (
+								<p className='text-sm text-warning'>
+									Selecciona material y espesor
+								</p>
+							)}
+						</div>
 					</div>
-				</div>
-			</AccordionTrigger>
+				</AccordionTrigger>
+				<button
+					type='button'
+					onClick={() => onRemove(index)}
+					className='flex items-center gap-1.5 p-2 mr-2 rounded-md text-destructive text-sm hover:bg-destructive/10 transition-colors shrink-0'
+					title='Eliminar archivo'
+				>
+					<Trash2 className='h-4 w-4' />
+					<span className='hidden sm:inline'>Eliminar</span>
+				</button>
+			</div>
 			<AccordionContent className='px-4'>
 				<div className='grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4'>
 					{/* Left: DXF Viewer */}

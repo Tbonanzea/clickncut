@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getStatusVariant, getStatusLabel } from '@/lib/status-utils';
+import { formatPrice } from '@/lib/format';
 
 export type OrderWithUser = Order & {
 	user: Pick<User, 'email' | 'firstName' | 'lastName'>;
@@ -64,7 +65,7 @@ export const columns: ColumnDef<OrderWithUser>[] = [
 			const price = row.original.totalPrice;
 			return (
 				<div className="font-semibold">
-					${price.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+					{formatPrice(price, 2)}
 				</div>
 			);
 		},

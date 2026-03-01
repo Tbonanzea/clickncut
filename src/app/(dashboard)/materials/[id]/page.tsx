@@ -24,6 +24,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { PriceInput } from '@/components/ui/price-input';
+import { formatPrice, parseFormattedNumber } from '@/lib/format';
 
 type MaterialWithTypes = Awaited<ReturnType<typeof getMaterialById>>;
 
@@ -74,7 +76,7 @@ export default function EditMaterialPage() {
 			width: parseFloat(formData.get('width') as string),
 			length: parseFloat(formData.get('length') as string),
 			height: parseFloat(formData.get('height') as string),
-			pricePerUnit: parseFloat(formData.get('pricePerUnit') as string),
+			pricePerUnit: parseFormattedNumber(formData.get('pricePerUnit') as string),
 			massPerUnit: parseFloat(formData.get('massPerUnit') as string),
 			stock: parseInt(formData.get('stock') as string),
 			errorMargin: parseFloat(formData.get('errorMargin') as string),
@@ -305,7 +307,7 @@ export default function EditMaterialPage() {
 
 										{/* Comercial */}
 										<div className="grid grid-cols-3 md:grid-cols-5 gap-3 text-sm">
-											<TypeField label="Precio" value={`$${type.pricePerUnit.toLocaleString('es-AR')}`} />
+											<TypeField label="Precio" value={formatPrice(type.pricePerUnit)} />
 											<TypeField label="Masa" value={`${Number(type.massPerUnit.toFixed(2))} kg`} />
 											<TypeField label="Stock" value={`${type.stock} uds`} />
 											<TypeField label="Corte ancho" value={`${type.minCutWidth}–${type.maxCutWidth} mm`} />
@@ -381,7 +383,7 @@ function MaterialTypeForm({
 				</div>
 				<div>
 					<Label htmlFor="pricePerUnit">Precio/Unidad ($) *</Label>
-					<Input id="pricePerUnit" name="pricePerUnit" type="number" step="0.01" defaultValue={defaultValues?.pricePerUnit ?? ''} required />
+					<PriceInput id="pricePerUnit" name="pricePerUnit" defaultValue={defaultValues?.pricePerUnit ?? ''} required />
 				</div>
 				<div>
 					<Label htmlFor="massPerUnit">Masa/Unidad (kg) *</Label>

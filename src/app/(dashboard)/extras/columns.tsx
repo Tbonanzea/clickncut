@@ -3,6 +3,7 @@
 import { ExtraService } from '@/generated/prisma/browser';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { formatPrice } from '@/lib/format';
 
 export type ExtraServiceWithStats = ExtraService & {
 	_count: {
@@ -43,7 +44,7 @@ export const columns: ColumnDef<ExtraServiceWithStats>[] = [
 		header: 'Precio',
 		cell: ({ row }) => (
 			<div className="font-semibold text-right">
-				${row.original.price.toLocaleString('es-AR')}
+				{formatPrice(row.original.price)}
 			</div>
 		),
 	},
