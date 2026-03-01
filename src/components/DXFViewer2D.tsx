@@ -841,7 +841,7 @@ export default function DXFViewer2D({
 
 			<div
 				ref={containerRef}
-				className='w-full border border-gray-300 rounded-md overflow-hidden bg-gray-100'
+				className='w-full flex-1 border border-gray-300 rounded-md overflow-hidden bg-gray-100'
 				style={{ minHeight: '400px' }}
 			/>
 

@@ -19,6 +19,15 @@ export interface PiercingsBreakdown {
 	total: number;
 }
 
+export interface CutLengthResult {
+	totalMm: number;
+}
+
+export interface BoundingBoxResult {
+	widthMm: number;
+	heightMm: number;
+}
+
 export interface ParseDxfSuccess {
 	type: 'PARSE_DXF_SUCCESS';
 	payload: {
@@ -26,6 +35,8 @@ export interface ParseDxfSuccess {
 		parsed: any; // Parsed DXF object from dxf-parser
 		validation: DXFValidationResult;
 		piercings: PiercingsBreakdown;
+		cutLength: CutLengthResult;
+		boundingBox: BoundingBoxResult;
 	};
 }
 
@@ -44,4 +55,6 @@ export interface ParsedDxfResult {
 	parsed: any;
 	validation: DXFValidationResult;
 	piercings: PiercingsBreakdown;
+	cutLength: CutLengthResult;
+	boundingBox: BoundingBoxResult;
 }

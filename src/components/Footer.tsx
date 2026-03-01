@@ -12,14 +12,14 @@ export default function Footer() {
 						<Link href='/' className='inline-block mb-4'>
 							<Image
 								src='/images/logo.png'
-								alt='CutForge'
+								alt='ClicknCut'
 								width={140}
 								height={35}
 								className='brightness-0 invert'
 							/>
 						</Link>
 						<p className='text-sm text-primary-foreground/80 leading-relaxed'>
-							Plataforma de corte láser y CNC para makers. Tu diseño convertido
+							Plataforma de corte láser para makers. Tu diseño convertido
 							en realidad con precisión industrial.
 						</p>
 					</div>
@@ -78,7 +78,7 @@ export default function Footer() {
 							</li>
 							<li>
 								<span className='text-sm text-primary-foreground/80'>
-									Corte CNC
+									Corte a medida
 								</span>
 							</li>
 							<li>
@@ -103,10 +103,10 @@ export default function Footer() {
 							<li className='flex items-start gap-3'>
 								<Mail className='size-4 mt-0.5 shrink-0 text-primary-foreground/60' />
 								<a
-									href='mailto:info@cutforge.com'
+									href='mailto:info@clickncut.app'
 									className='text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors'
 								>
-									info@cutforge.com
+									info@clickncut.app
 								</a>
 							</li>
 							<li className='flex items-start gap-3'>
@@ -132,7 +132,7 @@ export default function Footer() {
 				<div className='mt-12 pt-8 border-t border-primary-foreground/10'>
 					<div className='flex flex-col md:flex-row justify-between items-center gap-4'>
 						<p className='text-sm text-primary-foreground/60'>
-							© {new Date().getFullYear()} CutForge. Todos los derechos
+							© {new Date().getFullYear()} ClicknCut. Todos los derechos
 							reservados.
 						</p>
 						<div className='flex items-center gap-6'>

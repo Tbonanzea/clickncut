@@ -209,6 +209,15 @@ export async function createMaterialType(
 		minCutLength: number;
 		maxCutWidth: number;
 		minCutWidth: number;
+		// Cutting parameters
+		cuttingSpeed?: number | null;
+		assistGas?: string | null;
+		gasConsumption?: number | null;
+		piercingTime?: number | null;
+		sheetWeight?: number | null;
+		finish?: string | null;
+		gasPressure?: number | null;
+		piercingDistance?: number | null;
 	}
 ) {
 	try {
@@ -236,17 +245,26 @@ export async function createMaterialType(
 export async function updateMaterialType(
 	id: string,
 	data: {
-		width: number;
-		length: number;
-		height: number;
-		pricePerUnit: number;
-		massPerUnit: number;
-		stock: number;
-		errorMargin: number;
-		maxCutLength: number;
-		minCutLength: number;
-		maxCutWidth: number;
-		minCutWidth: number;
+		width?: number;
+		length?: number;
+		height?: number;
+		pricePerUnit?: number;
+		massPerUnit?: number;
+		stock?: number;
+		errorMargin?: number;
+		maxCutLength?: number;
+		minCutLength?: number;
+		maxCutWidth?: number;
+		minCutWidth?: number;
+		// Cutting parameters
+		cuttingSpeed?: number | null;
+		assistGas?: string | null;
+		gasConsumption?: number | null;
+		piercingTime?: number | null;
+		sheetWeight?: number | null;
+		finish?: string | null;
+		gasPressure?: number | null;
+		piercingDistance?: number | null;
 	}
 ) {
 	try {

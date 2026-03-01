@@ -101,7 +101,7 @@ function FileUploader() {
 
 				// Parse and validate DXF file in Web Worker
 				try {
-					const { parsed, validation, piercings } = await parseDxf(text);
+					const { parsed, validation, piercings, cutLength, boundingBox } = await parseDxf(text);
 
 					setUploadProgress(
 						Math.round(((processed + 1) / filesToProcess.length) * 100)
@@ -146,6 +146,8 @@ function FileUploader() {
 							_validationErrors: [],
 							_parsedDxf: parsed,
 							_piercings: piercings,
+							_cutLength: cutLength,
+							_boundingBox: boundingBox,
 						};
 						addItem({
 							file: quotingFile,
@@ -249,7 +251,7 @@ function FileUploader() {
 	// 3. The browser tab is closed (automatic cleanup)
 
 	return (
-		<Card className='w-full max-w-3xl'>
+		<Card className='w-full'>
 			<CardHeader>
 				<CardTitle>Subir archivos DXF</CardTitle>
 				<CardDescription>

@@ -707,6 +707,72 @@ function expandInserts(entities: any[], blocks?: Record<string, any>): any[] {
 }
 
 /**
+ * Compute bounding box of a DXF file from all entity points.
+ * Returns dimensions in mm (assuming DXF units are mm).
+ */
+export interface BoundingBoxResult {
+	widthMm: number;
+	heightMm: number;
+}
+
+export function computeDXFBoundingBox(
+	entities: any[],
+	blocks?: Record<string, any>,
+): BoundingBoxResult {
+	const expandedEntities = expandInserts(entities, blocks);
+
+	let minX = Infinity,
+		minY = Infinity,
+		maxX = -Infinity,
+		maxY = -Infinity;
+
+	for (const entity of expandedEntities) {
+		const seg = entityToSegment(entity);
+		if (!seg) continue;
+		for (const p of seg.points) {
+			if (p.x < minX) minX = p.x;
+			if (p.y < minY) minY = p.y;
+			if (p.x > maxX) maxX = p.x;
+			if (p.y > maxY) maxY = p.y;
+		}
+	}
+
+	if (!isFinite(minX)) return { widthMm: 0, heightMm: 0 };
+	return { widthMm: maxX - minX, heightMm: maxY - minY };
+}
+
+/**
+ * Compute total cut length of a DXF file.
+ * Sums the polyline arc-length of every segment (all entity types).
+ * Returns length in mm (assuming DXF units are mm).
+ *
+ * @param entities - Array of DXF entities
+ * @param blocks - Optional blocks object for expanding INSERT entities
+ */
+export interface CutLengthResult {
+	totalMm: number;
+}
+
+export function computeTotalCutLength(
+	entities: any[],
+	blocks?: Record<string, any>,
+): CutLengthResult {
+	const expandedEntities = expandInserts(entities, blocks);
+
+	let totalMm = 0;
+	for (const entity of expandedEntities) {
+		const seg = entityToSegment(entity);
+		if (!seg || seg.points.length < 2) continue;
+
+		for (let i = 0; i < seg.points.length - 1; i++) {
+			totalMm += dist2D(seg.points[i], seg.points[i + 1]);
+		}
+	}
+
+	return { totalMm };
+}
+
+/**
  * Compute total piercings in a DXF file.
  * Total piercings = single closed entities + assembled closed paths.
  * This count is used for CNC cutting cost estimation.

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -14,85 +8,87 @@ datasource db {
 }
 
 model User {
-  id           String     @id // Same as supabase uid
-  email        String     @unique
-  authProviders AuthProvider[] @default([EMAIL]) // Array of enums
-  firstName    String?
-  lastName     String?
-  role         UserRole   @default(USER)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  carts        Cart[]
-  orders       Order[]
-  files        File[]
-  addresses    Address[]
+  id            String         @id
+  email         String         @unique
+  role          UserRole       @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  authProviders AuthProvider[] @default([EMAIL])
+  firstName     String?
+  lastName      String?
+  addresses     Address[]
+  carts         Cart[]
+  files         File[]
+  orders        Order[]
 }
 
 model Address {
-  id           String     @id @default(uuid())
-  isDefault    Boolean    @default(false)
-  userId       String
-  street       String
-  city         String
-  state        String
-  zip          String
-  country      String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  isDefault Boolean  @default(false)
+  userId    String
+  street    String
+  city      String
+  state     String
+  zip       String
+  country   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model File {
-  id         String     @id @default(uuid())
+  id         String      @id @default(uuid())
   userId     String
   filename   String
   filepath   String
   filetype   FileType
-  uploadedAt DateTime   @default(now())
+  uploadedAt DateTime    @default(now())
   cartItems  CartItem[]
+  user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
-
-  user User @relation(fields: [userId], references: [id])
 }
 
 model Material {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  types        MaterialType[]
-  description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  cartItems    CartItem[]
+  id          String         @id @default(uuid())
+  name        String         @unique
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  cartItems   CartItem[]
+  types       MaterialType[]
 }
 
 model MaterialType {
-  id           String   @id @default(uuid())
-  width        Float
-  length       Float
-  height       Float
-  pricePerUnit Float
-  massPerUnit  Float
-  stock        Int      @default(0)
-  errorMargin  Float
-  materialId   String
-  maxCutLength Float
-  minCutLength Float
-  maxCutWidth  Float
-  minCutWidth  Float
-
-  orderItems   OrderItem[]
-
-  material Material @relation(fields: [materialId], references: [id])
+  id               String      @id @default(uuid())
+  width            Float
+  length           Float
+  height           Float
+  pricePerUnit     Float
+  massPerUnit      Float
+  stock            Int         @default(0)
+  errorMargin      Float
+  materialId       String
+  maxCutLength     Float
+  minCutLength     Float
+  maxCutWidth      Float
+  minCutWidth      Float
+  assistGas        String?
+  cuttingSpeed     Float?
+  finish           String?
+  gasConsumption   Float?
+  gasPressure      Float?
+  piercingDistance Float?
+  piercingTime     Float?
+  sheetWeight      Float?
+  material         Material    @relation(fields: [materialId], references: [id])
+  orderItems       OrderItem[]
 }
 
 model Cart {
-  id      String     @id @default(uuid())
-  userId  String
-  items   CartItem[]
-
-  user User @relation(fields: [userId], references: [id])
+  id     String     @id @default(uuid())
+  userId String
+  user   User       @relation(fields: [userId], references: [id])
+  items  CartItem[]
 }
 
 model CartItem {
@@ -102,134 +98,172 @@ model CartItem {
   materialId String
   quantity   Int
   price      Float
-
-  cart     Cart     @relation(fields: [cartId], references: [id])
-  file     File     @relation(fields: [fileId], references: [id])
-  material Material @relation(fields: [materialId], references: [id])
+  cart       Cart     @relation(fields: [cartId], references: [id])
+  file       File     @relation(fields: [fileId], references: [id])
+  material   Material @relation(fields: [materialId], references: [id])
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  userId    String
-  status    OrderStatus @default(PENDING)
+  id         String       @id @default(uuid())
+  userId     String
+  status     OrderStatus  @default(PENDING)
   totalPrice Float
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  items     OrderItem[]
-  extras    OrderExtra[]
-  payments  Payment[]
-  shipments Shipment[]
-
-  user User @relation(fields: [userId], references: [id])
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  user       User         @relation(fields: [userId], references: [id])
+  extras     OrderExtra[]
+  items      OrderItem[]
+  payments   Payment[]
+  shipments  Shipment[]
 }
 
 model OrderItem {
-  id         String   @id @default(uuid())
-  orderId    String
-  fileId     String
+  id             String         @id @default(uuid())
+  orderId        String
+  fileId         String
   materialTypeId String
-  quantity   Int
-  price      Float
-  shipments  ShipmentItem[]
-
-  order    Order    @relation(fields: [orderId], references: [id])
-  file     File     @relation(fields: [fileId], references: [id])
-  materialType MaterialType @relation(fields: [materialTypeId], references: [id])
+  quantity       Int
+  price          Float
+  file           File           @relation(fields: [fileId], references: [id])
+  materialType   MaterialType   @relation(fields: [materialTypeId], references: [id])
+  order          Order          @relation(fields: [orderId], references: [id])
+  shipments      ShipmentItem[]
 }
 
 model Payment {
   id                String        @id @default(uuid())
   orderId           String
-  paymentMethod     String        // "MERCADOPAGO" | "TRANSFER"
+  paymentMethod     String
   status            PaymentStatus @default(PENDING)
   amount            Float
   paidAt            DateTime?
-
-  // MercadoPago specific fields
-  mercadopagoId     String?       // Preference ID or Payment ID from MP
-  mercadopagoStatus String?       // Raw status from MP (approved, pending, etc)
-
-  // Bank transfer specific fields
-  transferDetails   Json?         // { comprobante: "...", banco: "...", fecha: "..." }
-
   createdAt         DateTime      @default(now())
+  mercadopagoId     String?
+  mercadopagoStatus String?
+  transferDetails   Json?
   updatedAt         DateTime      @updatedAt
-
-  order Order @relation(fields: [orderId], references: [id])
+  order             Order         @relation(fields: [orderId], references: [id])
 }
 
 model Shipment {
   id             String         @id @default(uuid())
-  orderId        String         
+  orderId        String
   carrier        String
   trackingNumber String?
   status         ShipmentStatus @default(PENDING)
   shippedAt      DateTime?
   deliveredAt    DateTime?
+  order          Order          @relation(fields: [orderId], references: [id])
   items          ShipmentItem[]
-
-  order Order @relation(fields: [orderId], references: [id])
 }
 
 model ShipmentItem {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   shipmentId  String
-  orderItemId String //array of order items
+  orderItemId String
   quantity    Int
-
-  shipment   Shipment   @relation(fields: [shipmentId], references: [id])
-  orderItem  OrderItem  @relation(fields: [orderItemId], references: [id])
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id])
 }
 
 model MaterialTypeCut {
-  id           String   @id @default(uuid())
-  name         String
-  description  String?
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
   materialTypeId String
-  width        Float
-  length       Float
-  height       Float
-  pricePerUnit Float
-  massPerUnit  Float
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  width          Float
+  length         Float
+  height         Float
+  pricePerUnit   Float
+  massPerUnit    Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model CutType {
-  id           String   @id @default(uuid())
-  name         String
-  description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ExtraService {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String       @id @default(uuid())
+  name        String       @unique
   description String?
   price       Float
-  unit        String   // "por pieza", "por proyecto", "por pedido"
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  unit        String
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   orderExtras OrderExtra[]
 }
 
 model OrderExtra {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   orderId        String
   extraServiceId String
-  quantity       Int      @default(1)
-  priceAtOrder   Float    // Precio al momento de la orden (puede cambiar después)
-
-  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  extraService ExtraService @relation(fields: [extraServiceId], references: [id])
+  quantity       Int          @default(1)
+  priceAtOrder   Float
+  extraService   ExtraService @relation(fields: [extraServiceId], references: [id])
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@unique([orderId, extraServiceId])
 }
 
-// Enums
+model FixedCost {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  monthlyCost Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PricingConfig {
+  id                       String   @id @default(uuid())
+  label                    String   @default("default")
+  productiveHoursPerMonth  Float    @default(176)
+  workingDaysPerMonth      Float    @default(22)
+  machineEfficiency        Float    @default(0.75)
+  maxKgPerShipment         Float    @default(15)
+  usdToArsRate             Float    @default(1200)
+  machineValueUsd          Float    @default(25000)
+  amortizationYears        Float    @default(5)
+  laserConsumptionKw       Float    @default(0.8)
+  energyCostPerKwh         Float    @default(120)
+  oxygenCostPerM3          Float    @default(8000)
+  nitrogenCostPerM3        Float    @default(12000)
+  lensCost                 Float    @default(15000)
+  lensLifeHours            Float    @default(10)
+  nozzleCost               Float    @default(8000)
+  nozzleLifeHours          Float    @default(10)
+  programmingCostPerPiece  Float    @default(500)
+  setupCostPerPiece        Float    @default(300)
+  packagingCostPerShipment Float    @default(200)
+  dispatchCostPerOrder     Float    @default(500)
+  shippingCostPerOrder     Float    @default(1500)
+  profitMargin             Float    @default(0.35)
+  urgencySurcharge         Float    @default(0.50)
+  materialWasteFactor      Float    @default(0.15)
+  nestingSafetyMargin      Float    @default(0.05)
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model VolumeDiscount {
+  id                 String   @id @default(uuid())
+  minQuantity        Int
+  maxQuantity        Int?
+  discountPercentage Float
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 enum UserRole {
   USER
   ADMIN

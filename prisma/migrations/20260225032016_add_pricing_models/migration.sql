@@ -1,0 +1,70 @@
+-- AlterTable
+ALTER TABLE "MaterialType" ADD COLUMN     "assistGas" TEXT,
+ADD COLUMN     "cuttingSpeed" DOUBLE PRECISION,
+ADD COLUMN     "finish" TEXT,
+ADD COLUMN     "gasConsumption" DOUBLE PRECISION,
+ADD COLUMN     "gasPressure" DOUBLE PRECISION,
+ADD COLUMN     "piercingDistance" DOUBLE PRECISION,
+ADD COLUMN     "piercingTime" DOUBLE PRECISION,
+ADD COLUMN     "sheetWeight" DOUBLE PRECISION;
+
+-- CreateTable
+CREATE TABLE "FixedCost" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "monthlyCost" DOUBLE PRECISION NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "FixedCost_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PricingConfig" (
+    "id" TEXT NOT NULL,
+    "label" TEXT NOT NULL DEFAULT 'default',
+    "productiveHoursPerMonth" DOUBLE PRECISION NOT NULL DEFAULT 176,
+    "workingDaysPerMonth" DOUBLE PRECISION NOT NULL DEFAULT 22,
+    "machineEfficiency" DOUBLE PRECISION NOT NULL DEFAULT 0.75,
+    "maxKgPerShipment" DOUBLE PRECISION NOT NULL DEFAULT 15,
+    "usdToArsRate" DOUBLE PRECISION NOT NULL DEFAULT 1200,
+    "machineValueUsd" DOUBLE PRECISION NOT NULL DEFAULT 25000,
+    "amortizationYears" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "laserConsumptionKw" DOUBLE PRECISION NOT NULL DEFAULT 0.8,
+    "energyCostPerKwh" DOUBLE PRECISION NOT NULL DEFAULT 120,
+    "oxygenCostPerM3" DOUBLE PRECISION NOT NULL DEFAULT 8000,
+    "nitrogenCostPerM3" DOUBLE PRECISION NOT NULL DEFAULT 12000,
+    "lensCost" DOUBLE PRECISION NOT NULL DEFAULT 15000,
+    "lensLifeHours" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "nozzleCost" DOUBLE PRECISION NOT NULL DEFAULT 8000,
+    "nozzleLifeHours" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "programmingCostPerPiece" DOUBLE PRECISION NOT NULL DEFAULT 500,
+    "setupCostPerPiece" DOUBLE PRECISION NOT NULL DEFAULT 300,
+    "packagingCostPerShipment" DOUBLE PRECISION NOT NULL DEFAULT 200,
+    "dispatchCostPerOrder" DOUBLE PRECISION NOT NULL DEFAULT 500,
+    "shippingCostPerOrder" DOUBLE PRECISION NOT NULL DEFAULT 1500,
+    "profitMargin" DOUBLE PRECISION NOT NULL DEFAULT 0.35,
+    "urgencySurcharge" DOUBLE PRECISION NOT NULL DEFAULT 0.50,
+    "materialWasteFactor" DOUBLE PRECISION NOT NULL DEFAULT 0.15,
+    "nestingSafetyMargin" DOUBLE PRECISION NOT NULL DEFAULT 0.05,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PricingConfig_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VolumeDiscount" (
+    "id" TEXT NOT NULL,
+    "minQuantity" INTEGER NOT NULL,
+    "maxQuantity" INTEGER,
+    "discountPercentage" DOUBLE PRECISION NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VolumeDiscount_pkey" PRIMARY KEY ("id")
+);

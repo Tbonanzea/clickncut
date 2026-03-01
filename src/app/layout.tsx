@@ -13,25 +13,25 @@ import { Providers } from './providers';
 
 export const metadata: Metadata = {
 	metadataBase: new URL(
-		process.env.NEXT_PUBLIC_SITE_URL || 'https://cutforge.com',
+		process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app',
 	),
 	title: {
-		default: 'CutForge - Corte Láser y CNC Personalizado',
-		template: '%s | CutForge',
+		default: 'ClicknCut - Corte Láser Personalizado',
+		template: '%s | ClicknCut',
 	},
 	description:
-		'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+		'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	keywords: [
 		'corte láser',
-		'CNC',
 		'corte personalizado',
 		'DXF',
 		'metal',
 		'acrílico',
+		'MDF',
 		'fabricación',
 	],
-	authors: [{ name: 'CutForge' }],
-	creator: 'CutForge',
+	authors: [{ name: 'ClicknCut' }],
+	creator: 'ClicknCut',
 	icons: {
 		icon: [
 			{ url: '/favicon.ico', sizes: 'any' },
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
 	openGraph: {
 		type: 'website',
 		locale: 'es_AR',
-		siteName: 'CutForge',
-		title: 'CutForge - Corte Láser y CNC Personalizado',
+		siteName: 'ClicknCut',
+		title: 'ClicknCut - Corte Láser Personalizado',
 		description:
-			'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+			'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	},
 	twitter: {
 		card: 'summary_large_image',
-		title: 'CutForge - Corte Láser y CNC Personalizado',
+		title: 'ClicknCut - Corte Láser Personalizado',
 		description:
-			'Plataforma de corte láser y CNC personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
+			'Plataforma de corte láser personalizado. Sube tu diseño DXF, elige el material y recibe tu pieza cortada con precisión.',
 	},
 	robots: {
 		index: true,

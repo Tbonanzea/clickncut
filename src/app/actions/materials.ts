@@ -19,6 +19,7 @@ export interface MaterialWithTypes {
 		minCutLength: number;
 		maxCutWidth: number;
 		minCutWidth: number;
+		finish: string | null;
 	}[];
 }
 

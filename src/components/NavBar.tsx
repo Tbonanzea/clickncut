@@ -76,7 +76,7 @@ export default function NavBar({ user }: NavBarProps) {
 			<Link href='/' className='shrink-0'>
 				<Image
 					src='/images/logo.png'
-					alt='CutForge'
+					alt='ClicknCut'
 					width={240}
 					height={64}
 					priority
@@ -170,7 +170,7 @@ export default function NavBar({ user }: NavBarProps) {
 						<SheetTitle>
 							<Image
 								src='/images/logo.png'
-								alt='CutForge'
+								alt='ClicknCut'
 								width={240}
 								height={60}
 								className='h-20 w-auto'

@@ -1,6 +1,6 @@
-## # CutForge Claude Code Configuration
+## # ClicknCut Claude Code Configuration
 
-This directory contains the autonomous engineering system for CutForge.
+This directory contains the autonomous engineering system for ClicknCut.
 
 ## Directory Structure
 

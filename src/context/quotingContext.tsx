@@ -21,6 +21,8 @@ export interface QuotingFile {
 	_validationErrors?: string[]; // Validation error messages
 	_parsedDxf?: any; // Cached parsed DXF object to avoid double-parsing
 	_piercings?: { singleClosed: number; assembledPaths: number; total: number };
+	_cutLength?: { totalMm: number }; // Total linear cut length in mm
+	_boundingBox?: { widthMm: number; heightMm: number }; // Piece bounding box
 }
 
 export interface QuotingMaterial {
@@ -42,6 +44,7 @@ export interface QuotingMaterialType {
 	minCutLength: number;
 	maxCutWidth: number;
 	minCutWidth: number;
+	finish?: string | null;
 }
 
 export interface QuotingCartItem {
@@ -90,6 +93,45 @@ type Action =
 	| { type: 'SET_ERROR'; payload: { field: string; error: string } }
 	| { type: 'CLEAR_ERROR'; payload: string }
 	| { type: 'RESET' };
+
+// Compute step validity dynamically from actual cart data
+// instead of relying on cached `completed` flags
+function computeStepValidity(
+	stepId: string,
+	items: QuotingCartItem[]
+): boolean {
+	switch (stepId) {
+		case 'file-upload':
+			return (
+				items.length > 0 &&
+				items.every(
+					(item) =>
+						item.file.filetype === 'DXF' &&
+						item.file._validationStatus === 'valid'
+				)
+			);
+		case 'material-selection':
+			return (
+				items.length > 0 &&
+				items.every((item) => !!item.material && !!item.materialType)
+			);
+		case 'extras':
+			return true;
+		case 'review':
+			return (
+				items.length > 0 &&
+				items.every(
+					(item) =>
+						!!item.file &&
+						!!item.material &&
+						!!item.materialType &&
+						item.quantity > 0
+				)
+			);
+		default:
+			return true;
+	}
+}
 
 const steps: QuotingStep[] = [
 	{
@@ -245,18 +287,56 @@ function useQuotingInternal(): QuotingContextType {
 	const router = useRouter();
 	const pathname = usePathname();
 
+	// Sync current step with URL + guard against invalid navigation
 	useEffect(() => {
 		const idx = state.steps.findIndex((s) => s.path === pathname);
-		if (idx !== -1 && idx !== state.currentStep) {
+		if (idx === -1) return;
+
+		// Guard: redirect to the first failing prerequisite step
+		if (idx > 0) {
+			for (let i = 0; i < idx; i++) {
+				if (
+					state.steps[i].required &&
+					!computeStepValidity(state.steps[i].id, state.cart.items)
+				) {
+					router.replace(state.steps[i].path);
+					return;
+				}
+			}
+		}
+
+		if (idx !== state.currentStep) {
 			dispatch({ type: 'SET_STEP', payload: idx });
 		}
-	}, [pathname, state.steps, state.currentStep]);
+	}, [pathname, state.steps, state.currentStep, state.cart.items, router]);
+
+	// When cart items change, invalidate completed steps that:
+	// 1. Have data that is no longer valid, OR
+	// 2. Come AFTER the current step (user changed data here,
+	//    so future steps need re-confirmation with the new data).
+	useEffect(() => {
+		state.steps.forEach((step, index) => {
+			if (!step.completed) return;
+			const valid = computeStepValidity(step.id, state.cart.items);
+			if (!valid || index > state.currentStep) {
+				dispatch({
+					type: 'MARK_STEP',
+					payload: { stepId: step.id, completed: false },
+				});
+			}
+		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [state.cart.items]);
 
 	const setStep = (n: number) => dispatch({ type: 'SET_STEP', payload: n });
 
 	const nextStep = () => {
 		const n = state.currentStep + 1;
-		if (n < state.steps.length) router.push(state.steps[n].path);
+		if (n < state.steps.length && canProceed(n)) {
+			// Mark current step as complete before leaving
+			validateCurrentStep();
+			router.push(state.steps[n].path);
+		}
 	};
 
 	const prevStep = () => {
@@ -266,7 +346,22 @@ function useQuotingInternal(): QuotingContextType {
 
 	const goToStep = (id: string) => {
 		const idx = state.steps.findIndex((s) => s.id === id);
-		if (idx !== -1) router.push(state.steps[idx].path);
+		if (idx === -1) return;
+		// Allow backward navigation; guard forward navigation
+		if (idx > state.currentStep && !canProceed(idx)) return;
+		if (idx > state.currentStep) {
+			// Mark current step as complete before leaving
+			validateCurrentStep();
+			// Mark any skipped intermediate steps
+			for (let i = state.currentStep + 1; i < idx; i++) {
+				const valid = computeStepValidity(
+					state.steps[i].id,
+					state.cart.items
+				);
+				markStep(state.steps[i].id, valid);
+			}
+		}
+		router.push(state.steps[idx].path);
 	};
 
 	const setCart = (cart: Partial<QuotingCart>) =>
@@ -306,7 +401,10 @@ function useQuotingInternal(): QuotingContextType {
 
 	const canProceed = (toStep: number): boolean => {
 		for (let i = 0; i < toStep; i++) {
-			if (state.steps[i].required && !state.steps[i].completed)
+			if (
+				state.steps[i].required &&
+				!computeStepValidity(state.steps[i].id, state.cart.items)
+			)
 				return false;
 		}
 		return true;

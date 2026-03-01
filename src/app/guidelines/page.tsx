@@ -18,7 +18,7 @@ import {
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-	title: 'Guía de Diseño para Corte Láser - CutForge',
+	title: 'Guía de Diseño para Corte Láser - ClicknCut',
 	description:
 		'Guía completa para preparar tus archivos DXF para corte láser. Aprende sobre tolerancias, materiales, y mejores prácticas para obtener resultados perfectos.',
 };

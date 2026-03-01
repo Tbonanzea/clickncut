@@ -13,7 +13,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
 	title: 'Iniciar Sesión',
 	description:
-		'Accede a tu cuenta de CutForge para cotizar y gestionar tus pedidos de corte láser y CNC.',
+		'Accede a tu cuenta de ClicknCut para cotizar y gestionar tus pedidos de corte láser.',
 	robots: {
 		index: true,
 		follow: true,
@@ -32,7 +32,7 @@ export default function LogInPage() {
 							<Link href='/' className='inline-block'>
 								<Image
 									src='/images/logo.png'
-									alt='CutForge'
+									alt='ClicknCut'
 									width={180}
 									height={45}
 									className='h-24 w-auto mx-auto'
@@ -54,7 +54,7 @@ export default function LogInPage() {
 
 				{/* Footer text */}
 				<p className='text-center text-sm text-muted-foreground'>
-					¿Primera vez en CutForge?{' '}
+					¿Primera vez en ClicknCut?{' '}
 					<Link
 						href='/auth/signup'
 						className='text-secondary hover:text-secondary/80 font-medium'

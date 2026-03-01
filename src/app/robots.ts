@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cutforge.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app';
 
 	return {
 		rules: [
@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
 					'/my-orders/',
 					'/profile/',
 					'/checkout/',
-					'/quoting/success/',
+					'/quote-success/',
 					'/auth/password/',
 				],
 			},
