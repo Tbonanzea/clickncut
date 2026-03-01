@@ -9,7 +9,7 @@ export function LocalBusinessJsonLd() {
 		description:
 			'Plataforma de corte láser personalizado. Servicios de corte de precisión en metal, acrílico, MDF y más materiales.',
 		url: baseUrl,
-		logo: `${baseUrl}/logo.png`,
+		logo: `${baseUrl}/images/logo.png`,
 		image: `${baseUrl}/og-image.png`,
 		telephone: '+54 9 351 XXXX-XXXX', // TODO: Replace with actual phone
 		email: 'contacto@clickncut.app', // TODO: Replace with actual email

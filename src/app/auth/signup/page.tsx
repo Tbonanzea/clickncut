@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Metadata } from 'next';
 import { CheckCircle2 } from 'lucide-react';
-import Image from 'next/image';
+import Logo from '@/components/Logo';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -30,16 +30,8 @@ export default function SignUpPage() {
 				<Card className='border-2 shadow-xl'>
 					<CardHeader className='text-center pb-2'>
 						{/* Logo */}
-						<div className='text-center'>
-							<Link href='/' className='inline-block'>
-								<Image
-									src='/images/logo.png'
-									alt='ClicknCut'
-									width={180}
-									height={45}
-									className='h-24 w-auto mx-auto'
-								/>
-							</Link>
+						<div className='flex justify-center'>
+							<Logo iconSize={36} className='text-[#d05f43]' textClass='text-xl text-[#28465a]' />
 						</div>
 						<CardTitle className='text-2xl'>Crear Cuenta</CardTitle>
 						<CardDescription>

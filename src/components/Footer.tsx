@@ -1,5 +1,5 @@
+import Logo from '@/components/Logo';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Mail, MapPin, Phone } from 'lucide-react';
 
 export default function Footer() {
@@ -9,15 +9,7 @@ export default function Footer() {
 				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8'>
 					{/* Brand Column */}
 					<div className='lg:col-span-1'>
-						<Link href='/' className='inline-block mb-4'>
-							<Image
-								src='/images/logo.png'
-								alt='ClicknCut'
-								width={140}
-								height={35}
-								className='brightness-0 invert'
-							/>
-						</Link>
+						<Logo iconSize={28} className='mb-4' textClass='text-lg' />
 						<p className='text-sm text-primary-foreground/80 leading-relaxed'>
 							Plataforma de corte láser para makers. Tu diseño convertido
 							en realidad con precisión industrial.

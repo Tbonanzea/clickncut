@@ -2,6 +2,7 @@
 
 import { signOut } from '@/app/auth/actions';
 import { Button } from '@/components/ui/button';
+import Logo from '@/components/Logo';
 import {
 	Sheet,
 	SheetContent,
@@ -23,7 +24,6 @@ import {
 	AvatarImage,
 } from '@/components/ui/avatar';
 import { LayoutDashboard, LogOut, Menu } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -73,16 +73,7 @@ export default function NavBar({ user }: NavBarProps) {
 	return (
 		<nav className='fixed top-0 left-0 w-full flex items-center justify-between h-18 px-4 md:px-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50'>
 			{/* Brand */}
-			<Link href='/' className='shrink-0'>
-				<Image
-					src='/images/logo.png'
-					alt='ClicknCut'
-					width={240}
-					height={64}
-					priority
-					className='h-24 w-auto'
-				/>
-			</Link>
+			<Logo className='shrink-0 text-[#d05f43]' textClass='text-lg text-[#28465a]' />
 
 			{/* Desktop Navigation */}
 			<div className='hidden md:flex items-center gap-1'>
@@ -168,13 +159,7 @@ export default function NavBar({ user }: NavBarProps) {
 				<SheetContent side='right' className='w-72 p-0'>
 					<SheetHeader className='border-b px-4 py-5'>
 						<SheetTitle>
-							<Image
-								src='/images/logo.png'
-								alt='ClicknCut'
-								width={240}
-								height={60}
-								className='h-20 w-auto'
-							/>
+							<Logo iconSize={28} className='text-[#d05f43]' textClass='text-lg text-[#28465a]' />
 						</SheetTitle>
 					</SheetHeader>
 					<nav className='flex flex-col px-4 py-6'>
