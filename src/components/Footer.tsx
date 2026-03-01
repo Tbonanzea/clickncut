@@ -103,10 +103,10 @@ export default function Footer() {
 							<li className='flex items-start gap-3'>
 								<Mail className='size-4 mt-0.5 shrink-0 text-primary-foreground/60' />
 								<a
-									href='mailto:info@clickncut.com'
+									href='mailto:info@clickncut.app'
 									className='text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors'
 								>
-									info@clickncut.com
+									info@clickncut.app
 								</a>
 							</li>
 							<li className='flex items-start gap-3'>

@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app';
 
 	// Static public pages
 	const staticPages: MetadataRoute.Sitemap = [

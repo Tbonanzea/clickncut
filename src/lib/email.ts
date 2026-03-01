@@ -144,7 +144,7 @@ export async function sendCustomerConfirmationEmail(data: OrderEmailData) {
 
 	try {
 		const { data, error } = await resend.emails.send({
-			from: 'ClicknCut <orders@clickncut.com>', // TODO: Update with actual domain
+			from: 'ClicknCut <orders@clickncut.app>', // TODO: Update with actual domain
 			to: [customerEmail],
 			subject: `Cotización Recibida - Orden #${orderId.slice(0, 8).toUpperCase()}`,
 			html,
@@ -293,7 +293,7 @@ export async function sendPaymentConfirmationEmail(data: PaymentEmailData) {
 
 	try {
 		const { data, error } = await resend.emails.send({
-			from: 'ClicknCut <orders@clickncut.com>',
+			from: 'ClicknCut <orders@clickncut.app>',
 			to: [customerEmail],
 			subject: `Pago Confirmado - Orden #${orderId.slice(0, 8).toUpperCase()}`,
 			html,
@@ -429,7 +429,7 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 		</html>
 	`;
 
-	const adminEmail = process.env.ADMIN_EMAIL || 'admin@clickncut.com'; // TODO: Update with actual admin email
+	const adminEmail = process.env.ADMIN_EMAIL || 'admin@clickncut.app'; // TODO: Update with actual admin email
 
 	// Skip email if Resend is not configured
 	if (!resend) {
@@ -439,7 +439,7 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 
 	try {
 		const { data, error } = await resend.emails.send({
-			from: 'ClicknCut System <system@clickncut.com>', // TODO: Update with actual domain
+			from: 'ClicknCut System <system@clickncut.app>', // TODO: Update with actual domain
 			to: [adminEmail],
 			subject: `Nueva Cotización - Orden #${orderId.slice(0, 8).toUpperCase()} - $${totalPrice.toFixed(2)}`,
 			html,

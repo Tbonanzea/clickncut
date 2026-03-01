@@ -1,5 +1,5 @@
 export function LocalBusinessJsonLd() {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app';
 
 	const structuredData = {
 		'@context': 'https://schema.org',
@@ -12,7 +12,7 @@ export function LocalBusinessJsonLd() {
 		logo: `${baseUrl}/logo.png`,
 		image: `${baseUrl}/og-image.png`,
 		telephone: '+54 9 351 XXXX-XXXX', // TODO: Replace with actual phone
-		email: 'contacto@clickncut.com', // TODO: Replace with actual email
+		email: 'contacto@clickncut.app', // TODO: Replace with actual email
 		address: {
 			'@type': 'PostalAddress',
 			addressLocality: 'Cordoba',
@@ -84,7 +84,7 @@ export function LocalBusinessJsonLd() {
 }
 
 export function WebsiteJsonLd() {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app';
 
 	const structuredData = {
 		'@context': 'https://schema.org',
@@ -119,7 +119,7 @@ export function BreadcrumbJsonLd({
 }: {
 	items: { name: string; url: string }[];
 }) {
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com';
+	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app';
 
 	const structuredData = {
 		'@context': 'https://schema.org',

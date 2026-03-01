@@ -13,7 +13,7 @@ import { Providers } from './providers';
 
 export const metadata: Metadata = {
 	metadataBase: new URL(
-		process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.com',
+		process.env.NEXT_PUBLIC_SITE_URL || 'https://clickncut.app',
 	),
 	title: {
 		default: 'ClicknCut - Corte Láser Personalizado',
