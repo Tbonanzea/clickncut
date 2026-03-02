@@ -148,17 +148,17 @@ const formulas: FormulaRow[] = [
 		step: 17,
 		name: 'Logística por pieza',
 		description:
-			'Costo de envío embebido en el precio unitario de cada pieza, proporcional a su peso. Se calcula una tarifa por kg a partir del costo de 1 envío ÷ peso máximo por envío.',
-		formula: 'pieceWeightKg × (Embalaje + Despacho + Flete) / maxKg',
-		code: 'logisticsCostPerPiece = pieceWeightKg × (pack + dispatch + ship) / maxKgPerShipment',
+			'Costo de envío embebido en el precio unitario de cada pieza, proporcional a su peso. El flete se determina por el nivel de envío que corresponde al bounding box de la pieza (lado corto y largo en cm). Se calcula una tarifa por kg a partir del costo de 1 envío ÷ peso máximo por envío.',
+		formula: 'pieceWeightKg × (Embalaje + Despacho + FleteTier) / maxKg',
+		code: 'logisticsCostPerPiece = pieceWeightKg × (pack + dispatch + tierShipCost) / maxKgPerShipment',
 	},
 	{
 		step: 18,
 		name: 'Umbral envío gratis',
 		description:
-			'Si el subtotal del pedido (que ya incluye la logística embebida) supera este umbral, el envío se muestra como gratis. Si no, se cobra un envío explícito. Valor configurable desde el panel de admin.',
-		formula: 'Valor configurable (admin)',
-		code: 'freeShippingThreshold = config.freeShippingThreshold',
+			'Si el subtotal del pedido supera este umbral, el envío es gratis. Si no, se cobra la diferencia entre el umbral y la logística ya embebida en los precios unitarios. Valor configurable desde el panel de admin.',
+		formula: 'Envío = max(0, Umbral − Σ logística embebida) / (1 − Comisión)',
+		code: 'shippingCost = max(0, threshold - totalEmbeddedLogistics) / (1 - commission)',
 	},
 	{
 		step: 19,

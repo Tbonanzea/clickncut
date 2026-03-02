@@ -5,27 +5,33 @@ import { FixedCostsTab } from './fixed-costs-tab';
 import { ProductionVarsTab } from './production-vars-tab';
 import { DiscountsTab } from './discounts-tab';
 import { FormulasTab } from './formulas-tab';
+import { ShippingTiersTab } from './shipping-tiers-tab';
 
 interface PricingTabsProps {
 	fixedCosts: any[];
 	config: any | null;
 	volumeDiscounts: any[];
+	shippingTiers: any[];
 }
 
 export function PricingTabs({
 	fixedCosts,
 	config,
 	volumeDiscounts,
+	shippingTiers,
 }: PricingTabsProps) {
 	return (
 		<Tabs defaultValue='fixed-costs'>
-			<TabsList className='grid w-full grid-cols-4'>
+			<TabsList className='grid w-full grid-cols-5'>
 				<TabsTrigger value='fixed-costs'>Costos Fijos</TabsTrigger>
 				<TabsTrigger value='production-vars'>
 					Variables
 				</TabsTrigger>
 				<TabsTrigger value='discounts'>
 					Márgenes
+				</TabsTrigger>
+				<TabsTrigger value='shipping'>
+					Envío
 				</TabsTrigger>
 				<TabsTrigger value='formulas'>
 					Fórmulas
@@ -45,6 +51,10 @@ export function PricingTabs({
 					config={config}
 					volumeDiscounts={volumeDiscounts}
 				/>
+			</TabsContent>
+
+			<TabsContent value='shipping' className='mt-6'>
+				<ShippingTiersTab shippingTiers={shippingTiers} />
 			</TabsContent>
 
 			<TabsContent value='formulas' className='mt-6'>

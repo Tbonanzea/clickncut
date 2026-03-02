@@ -66,6 +66,7 @@ interface DiscountsTabProps {
 		packagingCostPerShipment: number;
 		dispatchCostPerOrder: number;
 		shippingCostPerOrder: number;
+		freeShippingThreshold: number;
 		materialWasteFactor: number;
 		nestingSafetyMargin: number;
 	} | null;

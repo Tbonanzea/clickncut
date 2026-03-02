@@ -18,13 +18,22 @@ import {
 // ---------------------------------------------------------------------------
 
 export async function getPricingData() {
-	const [fixedCosts, config, volumeDiscounts] = await Promise.all([
-		prisma.fixedCost.findMany({ orderBy: { name: 'asc' } }),
-		prisma.pricingConfig.findFirst({ where: { isActive: true } }),
-		prisma.volumeDiscount.findMany({ orderBy: { minQuantity: 'asc' } }),
-	]);
+	const [fixedCosts, config, volumeDiscounts, shippingTiers] =
+		await Promise.all([
+			prisma.fixedCost.findMany({ orderBy: { name: 'asc' } }),
+			prisma.pricingConfig.findFirst({ where: { isActive: true } }),
+			prisma.volumeDiscount.findMany({ orderBy: { minQuantity: 'asc' } }),
+			prisma.shippingTier.findMany({ orderBy: { maxLongCm: 'asc' } }),
+		]);
 
-	return { fixedCosts, config, volumeDiscounts };
+	return { fixedCosts, config, volumeDiscounts, shippingTiers };
+}
+
+export async function getActiveShippingTiers() {
+	return prisma.shippingTier.findMany({
+		where: { isActive: true },
+		orderBy: { maxLongCm: 'asc' },
+	});
 }
 
 // ---------------------------------------------------------------------------
@@ -230,6 +239,114 @@ export async function toggleVolumeDiscount(id: string) {
 }
 
 // ---------------------------------------------------------------------------
+// ShippingTier CRUD
+// ---------------------------------------------------------------------------
+
+export async function createShippingTier(data: {
+	label: string;
+	maxShortCm: number;
+	maxLongCm: number;
+	shippingCost: number;
+}) {
+	try {
+		await requireAdmin();
+		const tier = await prisma.shippingTier.create({
+			data: {
+				label: data.label,
+				maxShortCm: data.maxShortCm,
+				maxLongCm: data.maxLongCm,
+				shippingCost: data.shippingCost,
+			},
+		});
+		revalidatePath('/pricing');
+		return { success: true as const, tier };
+	} catch (error: any) {
+		return { success: false as const, error: error.message };
+	}
+}
+
+export async function updateShippingTier(
+	id: string,
+	data: {
+		label?: string;
+		maxShortCm?: number;
+		maxLongCm?: number;
+		shippingCost?: number;
+	}
+) {
+	try {
+		await requireAdmin();
+		const tier = await prisma.shippingTier.update({
+			where: { id },
+			data,
+		});
+		revalidatePath('/pricing');
+		return { success: true as const, tier };
+	} catch (error: any) {
+		return { success: false as const, error: error.message };
+	}
+}
+
+export async function deleteShippingTier(id: string) {
+	try {
+		await requireAdmin();
+		await prisma.shippingTier.delete({ where: { id } });
+		revalidatePath('/pricing');
+		return { success: true as const };
+	} catch (error: any) {
+		return { success: false as const, error: error.message };
+	}
+}
+
+export async function toggleShippingTier(id: string) {
+	try {
+		await requireAdmin();
+		const existing = await prisma.shippingTier.findUnique({ where: { id } });
+		if (!existing) return { success: false as const, error: 'No encontrado' };
+
+		const updated = await prisma.shippingTier.update({
+			where: { id },
+			data: { isActive: !existing.isActive },
+		});
+		revalidatePath('/pricing');
+		return { success: true as const, tier: updated };
+	} catch (error: any) {
+		return { success: false as const, error: error.message };
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Shipping tier matching (pure function)
+// ---------------------------------------------------------------------------
+
+interface ShippingTierData {
+	maxShortCm: number;
+	maxLongCm: number;
+	shippingCost: number;
+}
+
+/**
+ * Finds the smallest active shipping tier that fits the bounding box.
+ * Tiers must be sorted by maxLongCm ASC.
+ * Returns the tier or null if no tier fits.
+ */
+function findShippingTier(
+	bbWidthMm: number,
+	bbHeightMm: number,
+	tiers: ShippingTierData[]
+): ShippingTierData | null {
+	const shortCm = Math.min(bbWidthMm, bbHeightMm) / 10;
+	const longCm = Math.max(bbWidthMm, bbHeightMm) / 10;
+
+	for (const tier of tiers) {
+		if (shortCm <= tier.maxShortCm && longCm <= tier.maxLongCm) {
+			return tier;
+		}
+	}
+	return null;
+}
+
+// ---------------------------------------------------------------------------
 // Quote price computation (called from quoting flow)
 // ---------------------------------------------------------------------------
 
@@ -248,7 +365,7 @@ export async function computeQuotePrice(input: {
 > {
 	try {
 		// Fetch all required data in parallel
-		const [materialType, config, fixedCosts, volumeDiscounts] =
+		const [materialType, config, fixedCosts, volumeDiscounts, shippingTiers] =
 			await Promise.all([
 				prisma.materialType.findUnique({
 					where: { id: input.materialTypeId },
@@ -259,6 +376,10 @@ export async function computeQuotePrice(input: {
 				prisma.volumeDiscount.findMany({
 					where: { isActive: true },
 					orderBy: { minQuantity: 'asc' },
+				}),
+				prisma.shippingTier.findMany({
+					where: { isActive: true },
+					orderBy: { maxLongCm: 'asc' },
 				}),
 			]);
 
@@ -277,6 +398,19 @@ export async function computeQuotePrice(input: {
 			return {
 				success: false,
 				error: `El material "${materialType.material.name}" no tiene parámetros de corte configurados.`,
+			};
+		}
+
+		// Resolve shipping tier by bounding box
+		const tier = findShippingTier(
+			input.boundingBoxWidthMm,
+			input.boundingBoxHeightMm,
+			shippingTiers
+		);
+		if (shippingTiers.length > 0 && !tier) {
+			return {
+				success: false,
+				error: 'La pieza excede las dimensiones máximas de envío.',
 			};
 		}
 
@@ -327,7 +461,7 @@ export async function computeQuotePrice(input: {
 			setupCostPerPiece: config.setupCostPerPiece,
 			packagingCostPerShipment: config.packagingCostPerShipment,
 			dispatchCostPerOrder: config.dispatchCostPerOrder,
-			shippingCostPerOrder: config.shippingCostPerOrder,
+			shippingCostPerOrder: tier ? tier.shippingCost : config.shippingCostPerOrder,
 			profitMargin: config.profitMargin,
 			urgencySurcharge: config.urgencySurcharge,
 			paymentCommission: config.paymentCommission,
@@ -393,8 +527,8 @@ export async function computeOrderPrices(
 			...new Set(orderItems.map((item) => item.materialTypeId)),
 		];
 
-		// Fetch config, fixedCosts, volumeDiscounts, and all needed materialTypes in parallel
-		const [materialTypes, config, fixedCosts, volumeDiscounts] =
+		// Fetch config, fixedCosts, volumeDiscounts, shippingTiers, and all needed materialTypes in parallel
+		const [materialTypes, config, fixedCosts, volumeDiscounts, shippingTiers] =
 			await Promise.all([
 				prisma.materialType.findMany({
 					where: { id: { in: materialTypeIds } },
@@ -405,6 +539,10 @@ export async function computeOrderPrices(
 				prisma.volumeDiscount.findMany({
 					where: { isActive: true },
 					orderBy: { minQuantity: 'asc' },
+				}),
+				prisma.shippingTier.findMany({
+					where: { isActive: true },
+					orderBy: { maxLongCm: 'asc' },
 				}),
 			]);
 
@@ -422,7 +560,7 @@ export async function computeOrderPrices(
 			0
 		);
 
-		const configValues: PricingConfigValues = {
+		const baseConfigValues: PricingConfigValues = {
 			productiveHoursPerMonth: config.productiveHoursPerMonth,
 			workingDaysPerMonth: config.workingDaysPerMonth,
 			machineEfficiency: config.machineEfficiency,
@@ -455,6 +593,7 @@ export async function computeOrderPrices(
 		const items: { itemIndex: number; breakdown: PricingBreakdown }[] = [];
 		let totalOrderWeightKg = 0;
 		let productionTotal = 0;
+		let maxTierShippingCost = config.shippingCostPerOrder;
 
 		for (let i = 0; i < orderItems.length; i++) {
 			const item = orderItems[i];
@@ -478,6 +617,30 @@ export async function computeOrderPrices(
 					error: `El material "${materialType.material.name}" no tiene parámetros de corte configurados.`,
 				};
 			}
+
+			// Resolve shipping tier for this item's bounding box
+			const tier = findShippingTier(
+				item.boundingBoxWidthMm,
+				item.boundingBoxHeightMm,
+				shippingTiers
+			);
+			if (shippingTiers.length > 0 && !tier) {
+				return {
+					success: false,
+					error: 'La pieza excede las dimensiones máximas de envío.',
+				};
+			}
+
+			const itemShippingCost = tier ? tier.shippingCost : config.shippingCostPerOrder;
+			if (itemShippingCost > maxTierShippingCost) {
+				maxTierShippingCost = itemShippingCost;
+			}
+
+			// Clone config with per-item shipping cost
+			const itemConfigValues: PricingConfigValues = {
+				...baseConfigValues,
+				shippingCostPerOrder: itemShippingCost,
+			};
 
 			// Find applicable volume discount for this item's quantity
 			let volumeDiscountRate = 0;
@@ -503,7 +666,7 @@ export async function computeOrderPrices(
 
 			const pricingInput: PricingInput = {
 				material: materialParams,
-				config: configValues,
+				config: itemConfigValues,
 				totalFixedCostPerMonth,
 				boundingBoxWidthMm: item.boundingBoxWidthMm,
 				boundingBoxHeightMm: item.boundingBoxHeightMm,
@@ -522,26 +685,35 @@ export async function computeOrderPrices(
 			productionTotal += breakdown.totalOrderPrice;
 		}
 
-		// Calculate order-level logistics (for internal/admin reference)
+		// Calculate order-level logistics using max tier shipping cost
 		const logistics = calculateOrderLogistics({
 			totalOrderWeightKg,
 			maxKgPerShipment: config.maxKgPerShipment,
 			packagingCostPerShipment: config.packagingCostPerShipment,
 			dispatchCostPerOrder: config.dispatchCostPerOrder,
-			shippingCostPerOrder: config.shippingCostPerOrder,
+			shippingCostPerOrder: maxTierShippingCost,
 			paymentCommission: config.paymentCommission,
 		});
 
 		// Free shipping threshold from configurable field
 		const freeShippingThreshold = config.freeShippingThreshold;
 
-		// productionTotal now includes embedded per-kg logistics in unit prices
+		// Sum of logistics already embedded in unit prices
+		const totalEmbeddedLogistics = items.reduce(
+			(sum, { breakdown }, i) =>
+				sum + breakdown.logisticsCostPerPiece * orderItems[i].quantity,
+			0
+		);
+
+		// productionTotal already includes embedded per-kg logistics in unit prices.
+		// If below threshold, charge only the difference (threshold - embedded).
 		const isFreeShipping = productionTotal >= freeShippingThreshold;
+		const shippingGap = Math.max(0, freeShippingThreshold - totalEmbeddedLogistics);
 		const shippingCost = isFreeShipping
 			? 0
 			: config.paymentCommission < 1
-				? freeShippingThreshold / (1 - config.paymentCommission)
-				: freeShippingThreshold;
+				? shippingGap / (1 - config.paymentCommission)
+				: shippingGap;
 
 		const grandTotal = productionTotal + shippingCost;
 

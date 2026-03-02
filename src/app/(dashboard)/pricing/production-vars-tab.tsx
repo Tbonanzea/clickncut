@@ -213,7 +213,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 				setupCostPerPiece: parseFloat(form.setupCostPerPiece),
 				packagingCostPerShipment: parseFloat(form.packagingCostPerShipment),
 				dispatchCostPerOrder: parseFloat(form.dispatchCostPerOrder),
-				shippingCostPerOrder: parseFloat(form.shippingCostPerOrder),
+				shippingCostPerOrder: config?.shippingCostPerOrder ?? defaults.shippingCostPerOrder,
 				freeShippingThreshold: parseFloat(form.freeShippingThreshold),
 				profitMargin: config?.profitMargin ?? defaults.profitMargin,
 				urgencySurcharge: config?.urgencySurcharge ?? defaults.urgencySurcharge,
@@ -485,7 +485,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-3'>
-						<div className='grid grid-cols-3 gap-3'>
+						<div className='grid grid-cols-2 gap-3'>
 							<Field
 								currency
 								label='Embalaje'
@@ -500,13 +500,6 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 								onChange={updateField('dispatchCostPerOrder')}
 								suffix='$/pedido'
 							/>
-							<Field
-								currency
-								label='Flete'
-								value={form.shippingCostPerOrder}
-								onChange={updateField('shippingCostPerOrder')}
-								suffix='$/pedido'
-							/>
 						</div>
 						<Field
 							currency
@@ -515,6 +508,10 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 							onChange={updateField('freeShippingThreshold')}
 							suffix='$'
 						/>
+						<p className='text-xs text-muted-foreground'>
+							El costo de flete se configura por tamaño en la
+							pestaña Envío.
+						</p>
 					</CardContent>
 				</Card>
 

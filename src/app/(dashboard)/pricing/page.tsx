@@ -26,7 +26,7 @@ export default async function PricingPage() {
 
 	if (dbUser?.role !== 'ADMIN') redirect('/dashboard');
 
-	const { fixedCosts, config, volumeDiscounts } = await getPricingData();
+	const { fixedCosts, config, volumeDiscounts, shippingTiers } = await getPricingData();
 
 	const totalFixedCost = fixedCosts
 		.filter((fc) => fc.isActive)
@@ -99,6 +99,7 @@ export default async function PricingPage() {
 				fixedCosts={fixedCosts}
 				config={config}
 				volumeDiscounts={volumeDiscounts}
+				shippingTiers={shippingTiers}
 			/>
 		</div>
 	);

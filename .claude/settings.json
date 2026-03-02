@@ -12,12 +12,9 @@
 		},
 		"playwright": {
 			"command": "npx",
-			"args": ["-y", "@anthropic-ai/mcp-server-playwright"],
+			"args": ["-y", "@playwright/mcp@latest"],
 			"disabled": false,
-			"description": "Browser automation for E2E testing (enable when needed)",
-			"env": {
-				"PLAYWRIGHT_BROWSERS_PATH": "0"
-			}
+			"description": "Browser automation for E2E testing (enable when needed)"
 		}
 	},
 	"hooks": {

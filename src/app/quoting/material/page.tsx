@@ -14,8 +14,9 @@ import {
 import { Accordion } from '@/components/ui/accordion';
 import MaterialSelectionCard from '@/components/MaterialSelectionCard';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { PricingBreakdown } from '@/lib/pricing-engine';
+import { getActiveShippingTiers } from '@/app/(dashboard)/pricing/actions';
 
 export default function MaterialSelectionPage() {
 	const { cart, updateItem, removeItem, validateCurrentStep, nextStep, prevStep } =
@@ -26,6 +27,25 @@ export default function MaterialSelectionPage() {
 		isLoading: loadingPrices,
 		isFetching: fetchingPrices,
 	} = useCalculatePrice(cart.items);
+
+	// Fetch shipping tiers for max package dimensions
+	const [maxPackageDims, setMaxPackageDims] = useState<{
+		width: number | undefined;
+		height: number | undefined;
+	}>({ width: undefined, height: undefined });
+
+	useEffect(() => {
+		getActiveShippingTiers().then((tiers) => {
+			if (tiers.length > 0) {
+				// Tiers sorted by maxLongCm ASC — last one is largest
+				const largest = tiers[tiers.length - 1];
+				setMaxPackageDims({
+					width: largest.maxShortCm,
+					height: largest.maxLongCm,
+				});
+			}
+		});
+	}, []);
 
 	// Validate step whenever cart items change
 	useEffect(() => {
@@ -196,6 +216,8 @@ export default function MaterialSelectionPage() {
 								onRemove={removeItem}
 								breakdown={getBreakdown(idx)}
 								loadingPrice={loadingPrices && !orderPricing}
+								maxPackageWidth={maxPackageDims.width}
+								maxPackageHeight={maxPackageDims.height}
 							/>
 						))}
 					</Accordion>

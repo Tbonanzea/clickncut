@@ -250,11 +250,11 @@ model PricingConfig {
   urgencySurcharge         Float    @default(0.50)
   materialWasteFactor      Float    @default(0.15)
   nestingSafetyMargin      Float    @default(0.05)
-  freeShippingThreshold    Float    @default(2200)
   isActive                 Boolean  @default(true)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
   paymentCommission        Float    @default(0.06)
+  freeShippingThreshold    Float    @default(2200)
 }
 
 model VolumeDiscount {
@@ -265,6 +265,17 @@ model VolumeDiscount {
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model ShippingTier {
+  id           String   @id @default(uuid())
+  label        String
+  maxShortCm   Float
+  maxLongCm    Float
+  shippingCost Float
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 enum UserRole {

@@ -36,6 +36,8 @@ interface MaterialSelectionCardProps {
 	onRemove: (index: number) => void;
 	breakdown?: PricingBreakdown;
 	loadingPrice?: boolean;
+	maxPackageWidth?: number; // cm, from largest shipping tier
+	maxPackageHeight?: number; // cm, from largest shipping tier
 }
 
 function formatARS(value: number): string {
@@ -58,6 +60,8 @@ export default function MaterialSelectionCard({
 	onRemove,
 	breakdown,
 	loadingPrice,
+	maxPackageWidth,
+	maxPackageHeight,
 }: MaterialSelectionCardProps) {
 	const isComplete = item.material && item.materialType && item.quantity > 0;
 	const selectedMaterial = materials.find((m) => m.id === item.material?.id);
@@ -95,6 +99,17 @@ export default function MaterialSelectionCard({
 					`La pieza (${bb.widthMm.toFixed(1)}×${bb.heightMm.toFixed(1)}mm) no cabe en la chapa (${mt.width}×${mt.length}mm)`,
 				);
 			}
+		}
+	}
+	// Check if piece exceeds max shipping tier dimensions
+	if (item.file._boundingBox && maxPackageWidth && maxPackageHeight) {
+		const bb = item.file._boundingBox;
+		const shortCm = Math.min(bb.widthMm, bb.heightMm) / 10;
+		const longCm = Math.max(bb.widthMm, bb.heightMm) / 10;
+		if (shortCm > maxPackageWidth || longCm > maxPackageHeight) {
+			sizeWarnings.push(
+				`La pieza (${shortCm.toFixed(1)}×${longCm.toFixed(1)} cm) excede el paquete máximo de envío (${maxPackageWidth}×${maxPackageHeight} cm)`,
+			);
 		}
 	}
 
@@ -157,8 +172,8 @@ export default function MaterialSelectionCard({
 							dxfUrl={item.file._blobUrl || item.file.filepath}
 							className='w-full min-h-[400px] lg:min-h-[450px]'
 							thickness={item.materialType?.height}
-							maxPackageWidth={100}
-							maxPackageHeight={200}
+							maxPackageWidth={maxPackageWidth}
+							maxPackageHeight={maxPackageHeight}
 							parsedDxf={item.file._parsedDxf}
 						/>
 						{/* DXF Geometry Info */}
