@@ -12,8 +12,8 @@
 		},
 		"playwright": {
 			"command": "npx",
-			"args": ["-y", "@modelcontextprotocol/server-playwright"],
-			"disabled": true,
+			"args": ["-y", "@anthropic-ai/mcp-server-playwright"],
+			"disabled": false,
 			"description": "Browser automation for E2E testing (enable when needed)",
 			"env": {
 				"PLAYWRIGHT_BROWSERS_PATH": "0"

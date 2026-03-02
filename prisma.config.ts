@@ -8,6 +8,11 @@ export default defineConfig({
 		seed: 'tsx prisma/seed.ts',
 	},
 	datasource: {
-		url: env('DATABASE_URL'),
+		// Use session-mode pooler (port 5432) for CLI operations (migrate, db push).
+		// The transaction pooler (port 6543 with pgbouncer=true) doesn't support
+		// prepared statements needed by Prisma's schema engine.
+		url: env('DATABASE_URL')
+			?.replace(':6543', ':5432')
+			?.replace('?pgbouncer=true', ''),
 	},
 });

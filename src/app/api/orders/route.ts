@@ -33,6 +33,7 @@ const OrderItemSchema = z.object({
 const CreateOrderSchema = z.object({
 	items: z.array(OrderItemSchema).min(1, 'At least one item is required'),
 	extras: z.array(z.string().uuid()).optional(), // Array of ExtraService IDs
+	logisticsCost: z.number().min(0).optional().default(0),
 });
 
 /**
@@ -84,8 +85,8 @@ export async function POST(request: NextRequest) {
 			extrasTotal = extraServices.reduce((sum, extra) => sum + extra.price, 0);
 		}
 
-		// Total price = items + extras
-		const totalPrice = itemsTotal + extrasTotal;
+		// Total price = items + logistics + extras
+		const totalPrice = itemsTotal + validatedData.logisticsCost + extrasTotal;
 
 		// Process items: create File records if needed
 		const processedItems = await Promise.all(
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
 				userId: user.id,
 				status: 'PENDING',
 				totalPrice,
+				logisticsCost: validatedData.logisticsCost,
 				items: {
 					create: processedItems,
 				},

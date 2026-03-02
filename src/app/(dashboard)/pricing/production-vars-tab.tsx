@@ -48,6 +48,7 @@ interface PricingConfig {
 	packagingCostPerShipment: number;
 	dispatchCostPerOrder: number;
 	shippingCostPerOrder: number;
+	freeShippingThreshold: number;
 	profitMargin: number;
 	urgencySurcharge: number;
 	paymentCommission: number;
@@ -76,6 +77,7 @@ const defaults: Omit<PricingConfig, 'id'> = {
 	packagingCostPerShipment: 200,
 	dispatchCostPerOrder: 500,
 	shippingCostPerOrder: 1500,
+	freeShippingThreshold: 2200,
 	profitMargin: 0.35,
 	urgencySurcharge: 0.50,
 	paymentCommission: 0.06,
@@ -179,6 +181,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 		packagingCostPerShipment: initial.packagingCostPerShipment.toString(),
 		dispatchCostPerOrder: initial.dispatchCostPerOrder.toString(),
 		shippingCostPerOrder: initial.shippingCostPerOrder.toString(),
+		freeShippingThreshold: initial.freeShippingThreshold.toString(),
 		materialWasteFactor: (initial.materialWasteFactor * 100).toString(),
 		nestingSafetyMargin: (initial.nestingSafetyMargin * 100).toString(),
 	});
@@ -211,6 +214,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 				packagingCostPerShipment: parseFloat(form.packagingCostPerShipment),
 				dispatchCostPerOrder: parseFloat(form.dispatchCostPerOrder),
 				shippingCostPerOrder: parseFloat(form.shippingCostPerOrder),
+				freeShippingThreshold: parseFloat(form.freeShippingThreshold),
 				profitMargin: config?.profitMargin ?? defaults.profitMargin,
 				urgencySurcharge: config?.urgencySurcharge ?? defaults.urgencySurcharge,
 				paymentCommission: config?.paymentCommission ?? defaults.paymentCommission,
@@ -480,7 +484,7 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 							Logística
 						</CardTitle>
 					</CardHeader>
-					<CardContent>
+					<CardContent className='space-y-3'>
 						<div className='grid grid-cols-3 gap-3'>
 							<Field
 								currency
@@ -504,6 +508,13 @@ export function ProductionVarsTab({ config }: ProductionVarsTabProps) {
 								suffix='$/pedido'
 							/>
 						</div>
+						<Field
+							currency
+							label='Umbral envío gratis'
+							value={form.freeShippingThreshold}
+							onChange={updateField('freeShippingThreshold')}
+							suffix='$'
+						/>
 					</CardContent>
 				</Card>
 

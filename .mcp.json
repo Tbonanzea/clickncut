@@ -1,0 +1,25 @@
+{
+	"mcpServers": {
+		"github": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/"
+		},
+		"postgres": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@bytebase/dbhub"],
+			"env": {
+				"DSN": "${DATABASE_URL}"
+			}
+		},
+		"context7": {
+			"type": "http",
+			"url": "https://mcp.context7.com/mcp"
+		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@playwright/mcp"]
+		}
+	}
+}

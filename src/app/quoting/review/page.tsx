@@ -23,6 +23,8 @@ import {
 	ChevronDown,
 	ChevronUp,
 	AlertCircle,
+	Truck,
+	PackageCheck,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { PricingBreakdown } from '@/lib/pricing-engine';
@@ -71,9 +73,6 @@ function PriceBreakdown({ breakdown }: { breakdown: PricingBreakdown }) {
 					<BreakdownRow label='Amortización' value={breakdown.amortizationCost} />
 					<BreakdownRow label='Programación' value={breakdown.programmingCost} />
 					<BreakdownRow label='Setup' value={breakdown.setupCost} />
-					<BreakdownRow label='Embalaje' value={breakdown.packagingCost} />
-					<BreakdownRow label='Despacho' value={breakdown.dispatchCost} />
-					<BreakdownRow label='Flete' value={breakdown.shippingCost} />
 					<Separator className='my-2' />
 					<BreakdownRow label='Costo total/pieza' value={breakdown.totalCostPerPiece} />
 					<BreakdownRow label='Ganancia' value={breakdown.profitPerPiece} />
@@ -82,6 +81,9 @@ function PriceBreakdown({ breakdown }: { breakdown: PricingBreakdown }) {
 					)}
 					{breakdown.urgencySurchargeAmount > 0 && (
 						<BreakdownRow label='Recargo urgencia' value={breakdown.urgencySurchargeAmount} />
+					)}
+					{breakdown.logisticsCostPerPiece > 0 && (
+						<BreakdownRow label='Logística (envío)' value={breakdown.logisticsCostPerPiece} />
 					)}
 					{breakdown.paymentCommissionAmount > 0 && (
 						<BreakdownRow label='Comisión MercadoPago' value={breakdown.paymentCommissionAmount} />
@@ -102,7 +104,7 @@ export default function ReviewPage() {
 	const { mutate: submitQuote, isPending, error } = useSubmitQuote();
 	const { data: extraServices = [], isLoading: loadingExtras } = useExtraServices();
 	const {
-		data: priceResults,
+		data: orderPricing,
 		isLoading: loadingPrices,
 		error: pricingError,
 	} = useCalculatePrice(cart.items);
@@ -111,12 +113,17 @@ export default function ReviewPage() {
 	const extrasTotal = calculateExtrasTotal(cart.extras || [], extraServices);
 
 	// Calculate material subtotal from pricing engine results
-	const materialSubtotal = priceResults
-		? priceResults.reduce((sum, pr) => sum + pr.breakdown.totalOrderPrice, 0)
+	const materialSubtotal = orderPricing
+		? orderPricing.items.reduce((sum, pr) => sum + pr.breakdown.totalOrderPrice, 0)
 		: 0;
 
-	// Grand total
-	const grandTotal = materialSubtotal + extrasTotal;
+	// Shipping
+	const isFreeShipping = orderPricing?.isFreeShipping ?? false;
+	const shippingCost = orderPricing?.shippingCost ?? 0;
+	const freeShippingThreshold = orderPricing?.freeShippingThreshold ?? 0;
+
+	// Grand total = production + shipping + extras
+	const grandTotal = materialSubtotal + shippingCost + extrasTotal;
 
 	// Total items count
 	const totalItemsCount = cart.items.reduce(
@@ -126,14 +133,14 @@ export default function ReviewPage() {
 
 	// Helper to get breakdown for a specific cart item
 	const getBreakdown = (idx: number): PricingBreakdown | undefined =>
-		priceResults?.find((pr) => pr.itemIndex === idx)?.breakdown;
+		orderPricing?.items.find((pr) => pr.itemIndex === idx)?.breakdown;
 
 	const canSubmit =
 		cart.items.length > 0 &&
 		!loadingPrices &&
 		!pricingError &&
-		priceResults &&
-		priceResults.length > 0 &&
+		orderPricing &&
+		orderPricing.items.length > 0 &&
 		cart.items.every(
 			(item) =>
 				item.file &&
@@ -295,6 +302,58 @@ export default function ReviewPage() {
 				</CardContent>
 			</Card>
 
+			{/* Shipping Card */}
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Truck className='h-5 w-5' />
+						Envío
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{loadingPrices ? (
+						<div className='flex items-center justify-center py-8'>
+							<Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+						</div>
+					) : orderPricing ? (
+						<>
+							{isFreeShipping ? (
+								<div className='flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg'>
+									<PackageCheck className='h-6 w-6 text-green-600 flex-none' />
+									<div>
+										<p className='font-semibold text-green-700'>Envío Gratis</p>
+										<p className='text-sm text-green-600/80'>
+											Tu pedido supera {formatARS(freeShippingThreshold)} y tiene envío sin cargo.
+										</p>
+									</div>
+								</div>
+							) : (
+								<div className='space-y-4'>
+									<div className='flex justify-between items-center'>
+										<p className='text-sm text-muted-foreground'>Costo de envío</p>
+										<p className='text-xl font-semibold'>
+											{formatARS(shippingCost)}
+										</p>
+									</div>
+									{freeShippingThreshold > 0 && (
+										<div className='p-3 bg-amber-500/10 border border-amber-500/20 rounded-md'>
+											<p className='text-sm text-amber-700'>
+												Te faltan {formatARS(freeShippingThreshold - materialSubtotal)} para envío gratis
+												(pedidos desde {formatARS(freeShippingThreshold)}).
+											</p>
+										</div>
+									)}
+								</div>
+							)}
+						</>
+					) : (
+						<div className='text-center py-8 text-muted-foreground'>
+							<p>—</p>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
 			{/* Extras Summary */}
 			<Card>
 				<CardHeader>
@@ -387,6 +446,23 @@ export default function ReviewPage() {
 							) : (
 								<span className='font-semibold'>
 									{formatARS(materialSubtotal)}
+								</span>
+							)}
+						</div>
+
+						<div className='flex justify-between items-center text-lg'>
+							<span className='text-muted-foreground'>
+								Envío
+							</span>
+							{loadingPrices ? (
+								<Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+							) : isFreeShipping ? (
+								<span className='font-semibold text-green-600'>
+									Gratis
+								</span>
+							) : (
+								<span className='font-semibold'>
+									{formatARS(shippingCost)}
 								</span>
 							)}
 						</div>

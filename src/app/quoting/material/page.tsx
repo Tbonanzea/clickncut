@@ -22,8 +22,9 @@ export default function MaterialSelectionPage() {
 		useQuoting();
 	const { data: materials, isLoading, error } = useMaterials();
 	const {
-		data: priceResults,
+		data: orderPricing,
 		isLoading: loadingPrices,
+		isFetching: fetchingPrices,
 	} = useCalculatePrice(cart.items);
 
 	// Validate step whenever cart items change
@@ -86,7 +87,7 @@ export default function MaterialSelectionPage() {
 
 	// Helper to get breakdown for a specific cart item
 	const getBreakdown = (idx: number): PricingBreakdown | undefined =>
-		priceResults?.find((pr) => pr.itemIndex === idx)?.breakdown;
+		orderPricing?.items.find((pr) => pr.itemIndex === idx)?.breakdown;
 
 	const canProceed =
 		cart.items.length > 0 &&
@@ -94,13 +95,13 @@ export default function MaterialSelectionPage() {
 			(item) => item.material && item.materialType && item.quantity > 0
 		);
 
-	// Calculate estimated total from pricing engine
-	const estimatedTotal = priceResults
-		? priceResults.reduce((sum, pr) => sum + pr.breakdown.totalOrderPrice, 0)
+	// Calculate estimated total from pricing engine (production subtotal, no logistics in preview)
+	const estimatedTotal = orderPricing
+		? orderPricing.items.reduce((sum, pr) => sum + pr.breakdown.totalOrderPrice, 0)
 		: 0;
 
 	// Fallback: count how many items have pricing ready
-	const pricedCount = priceResults?.length ?? 0;
+	const pricedCount = orderPricing?.items.length ?? 0;
 	const configuredCount = cart.items.filter(
 		(item) => item.material && item.materialType
 	).length;
@@ -194,7 +195,7 @@ export default function MaterialSelectionPage() {
 								onQuantityChange={handleQuantityChange}
 								onRemove={removeItem}
 								breakdown={getBreakdown(idx)}
-								loadingPrice={loadingPrices}
+								loadingPrice={loadingPrices && !orderPricing}
 							/>
 						))}
 					</Accordion>
@@ -217,7 +218,7 @@ export default function MaterialSelectionPage() {
 							<p className='text-sm text-muted-foreground'>
 								Subtotal estimado
 							</p>
-							{loadingPrices && configuredCount > 0 ? (
+							{loadingPrices && !orderPricing && configuredCount > 0 ? (
 								<Loader2 className='h-5 w-5 animate-spin text-muted-foreground ml-auto' />
 							) : estimatedTotal > 0 ? (
 								<>

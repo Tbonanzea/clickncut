@@ -3,6 +3,10 @@
 import { useMutation } from '@tanstack/react-query';
 import { useQuoting } from '@/context/quotingContext';
 import { useRouter } from 'next/navigation';
+import {
+	computeOrderPrices,
+	type OrderItemInput,
+} from '@/app/(dashboard)/pricing/actions';
 
 interface SubmitQuoteResponse {
 	orderId: string;
@@ -106,45 +110,68 @@ export function useSubmitQuote() {
 
 			const uploadedItems = await Promise.all(uploadPromises);
 
-			// Step 2: Create order via API
-			// Compute real prices using pricing engine
-			const orderItems = await Promise.all(
-				uploadedItems.map(async (item) => {
-					let price = item.materialType!.pricePerUnit; // fallback
+			// Step 2: Compute order prices in a single call
+			const pricingItems: OrderItemInput[] = uploadedItems
+				.filter(
+					(item) =>
+						item.file._cutLength &&
+						item.file._piercings &&
+						item.file._boundingBox &&
+						item.file._pieceAreaMm2 != null
+				)
+				.map((item) => ({
+					materialTypeId: item.materialType!.id,
+					boundingBoxWidthMm: item.file._boundingBox!.widthMm,
+					boundingBoxHeightMm: item.file._boundingBox!.heightMm,
+					pieceAreaCm2: item.file._pieceAreaMm2! / 100,
+					cutLengthMm: item.file._cutLength!.totalMm,
+					piercingCount: item.file._piercings!.total,
+					quantity: item.quantity,
+				}));
 
-					// Calculate real price if DXF data is available
-					if (item.file._cutLength && item.file._piercings && item.file._boundingBox && item.file._pieceAreaMm2 != null) {
-						try {
-							const { computeQuotePrice } = await import('@/app/(dashboard)/pricing/actions');
-							const result = await computeQuotePrice({
-								materialTypeId: item.materialType!.id,
-								boundingBoxWidthMm: item.file._boundingBox.widthMm,
-								boundingBoxHeightMm: item.file._boundingBox.heightMm,
-								pieceAreaCm2: item.file._pieceAreaMm2 / 100,
-								cutLengthMm: item.file._cutLength.totalMm,
-								piercingCount: item.file._piercings.total,
-								quantity: item.quantity,
-							});
-							if (result.success) {
-								price = result.breakdown.unitSalePrice;
-							}
-						} catch (e) {
-							console.error('Failed to compute price, using fallback:', e);
-						}
+			let logisticsCost = 0;
+			const itemPrices = new Map<number, number>();
+
+			if (pricingItems.length > 0) {
+				const priceResult = await computeOrderPrices(pricingItems);
+				if (priceResult.success) {
+					logisticsCost = priceResult.result.shippingCost;
+					for (const { itemIndex, breakdown } of priceResult.result.items) {
+						itemPrices.set(itemIndex, breakdown.unitSalePrice);
 					}
+				}
+			}
 
-					return {
-						fileData: {
-							filename: item.file.filename,
-							filepath: item.file.filepath,
-							filetype: item.file.filetype,
-						},
-						materialTypeId: item.materialType!.id,
-						quantity: item.quantity,
-						price,
-					};
-				})
-			);
+			// Step 3: Build order items
+			// Map from pricingItems index back to uploadedItems
+			let pricingIdx = 0;
+			const orderItems = uploadedItems.map((item) => {
+				let price = item.materialType!.pricePerUnit; // fallback
+
+				if (
+					item.file._cutLength &&
+					item.file._piercings &&
+					item.file._boundingBox &&
+					item.file._pieceAreaMm2 != null
+				) {
+					const computedPrice = itemPrices.get(pricingIdx);
+					if (computedPrice !== undefined) {
+						price = computedPrice;
+					}
+					pricingIdx++;
+				}
+
+				return {
+					fileData: {
+						filename: item.file.filename,
+						filepath: item.file.filepath,
+						filetype: item.file.filetype,
+					},
+					materialTypeId: item.materialType!.id,
+					quantity: item.quantity,
+					price,
+				};
+			});
 
 			// Call orders API
 			const response = await fetch('/api/orders', {
@@ -155,6 +182,7 @@ export function useSubmitQuote() {
 				body: JSON.stringify({
 					items: orderItems,
 					extras: cart.extras,
+					logisticsCost,
 				}),
 			});
 

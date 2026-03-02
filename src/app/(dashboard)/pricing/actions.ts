@@ -5,10 +5,12 @@ import { requireAdmin } from '@/lib/permissions';
 import { revalidatePath } from 'next/cache';
 import {
 	calculatePrice,
+	calculateOrderLogistics,
 	type PricingInput,
 	type PricingBreakdown,
 	type PricingConfigValues,
 	type MaterialParams,
+	type OrderLogistics,
 } from '@/lib/pricing-engine';
 
 // ---------------------------------------------------------------------------
@@ -120,6 +122,7 @@ export async function upsertPricingConfig(data: {
 	packagingCostPerShipment: number;
 	dispatchCostPerOrder: number;
 	shippingCostPerOrder: number;
+	freeShippingThreshold: number;
 	profitMargin: number;
 	urgencySurcharge: number;
 	paymentCommission: number;
@@ -330,6 +333,7 @@ export async function computeQuotePrice(input: {
 			paymentCommission: config.paymentCommission,
 			materialWasteFactor: config.materialWasteFactor,
 			nestingSafetyMargin: config.nestingSafetyMargin,
+			freeShippingThreshold: config.freeShippingThreshold,
 		};
 
 		const pricingInput: PricingInput = {
@@ -348,6 +352,210 @@ export async function computeQuotePrice(input: {
 
 		const breakdown = calculatePrice(pricingInput);
 		return { success: true, breakdown };
+	} catch (error: any) {
+		return { success: false, error: error.message };
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Order-level pricing: items + logistics in a single call
+// ---------------------------------------------------------------------------
+
+export interface OrderItemInput {
+	materialTypeId: string;
+	boundingBoxWidthMm: number;
+	boundingBoxHeightMm: number;
+	pieceAreaCm2: number;
+	cutLengthMm: number;
+	piercingCount: number;
+	quantity: number;
+	isUrgent?: boolean;
+}
+
+export interface OrderPricingResult {
+	items: { itemIndex: number; breakdown: PricingBreakdown }[];
+	logistics: OrderLogistics;
+	freeShippingThreshold: number;
+	isFreeShipping: boolean;
+	shippingCost: number; // 0 if free, or threshold with commission if not
+	grandTotal: number;
+}
+
+export async function computeOrderPrices(
+	orderItems: OrderItemInput[]
+): Promise<
+	| { success: true; result: OrderPricingResult }
+	| { success: false; error: string }
+> {
+	try {
+		// Collect unique materialTypeIds
+		const materialTypeIds = [
+			...new Set(orderItems.map((item) => item.materialTypeId)),
+		];
+
+		// Fetch config, fixedCosts, volumeDiscounts, and all needed materialTypes in parallel
+		const [materialTypes, config, fixedCosts, volumeDiscounts] =
+			await Promise.all([
+				prisma.materialType.findMany({
+					where: { id: { in: materialTypeIds } },
+					include: { material: true },
+				}),
+				prisma.pricingConfig.findFirst({ where: { isActive: true } }),
+				prisma.fixedCost.findMany({ where: { isActive: true } }),
+				prisma.volumeDiscount.findMany({
+					where: { isActive: true },
+					orderBy: { minQuantity: 'asc' },
+				}),
+			]);
+
+		if (!config) {
+			return {
+				success: false,
+				error: 'Configuración de precios no encontrada. Configure los parámetros en el panel de administración.',
+			};
+		}
+
+		const materialTypeMap = new Map(materialTypes.map((mt) => [mt.id, mt]));
+
+		const totalFixedCostPerMonth = fixedCosts.reduce(
+			(sum, fc) => sum + fc.monthlyCost,
+			0
+		);
+
+		const configValues: PricingConfigValues = {
+			productiveHoursPerMonth: config.productiveHoursPerMonth,
+			workingDaysPerMonth: config.workingDaysPerMonth,
+			machineEfficiency: config.machineEfficiency,
+			maxKgPerShipment: config.maxKgPerShipment,
+			usdToArsRate: config.usdToArsRate,
+			machineValueUsd: config.machineValueUsd,
+			amortizationYears: config.amortizationYears,
+			laserConsumptionKw: config.laserConsumptionKw,
+			energyCostPerKwh: config.energyCostPerKwh,
+			oxygenCostPerM3: config.oxygenCostPerM3,
+			nitrogenCostPerM3: config.nitrogenCostPerM3,
+			lensCost: config.lensCost,
+			lensLifeHours: config.lensLifeHours,
+			nozzleCost: config.nozzleCost,
+			nozzleLifeHours: config.nozzleLifeHours,
+			programmingCostPerPiece: config.programmingCostPerPiece,
+			setupCostPerPiece: config.setupCostPerPiece,
+			packagingCostPerShipment: config.packagingCostPerShipment,
+			dispatchCostPerOrder: config.dispatchCostPerOrder,
+			shippingCostPerOrder: config.shippingCostPerOrder,
+			profitMargin: config.profitMargin,
+			urgencySurcharge: config.urgencySurcharge,
+			paymentCommission: config.paymentCommission,
+			materialWasteFactor: config.materialWasteFactor,
+			nestingSafetyMargin: config.nestingSafetyMargin,
+			freeShippingThreshold: config.freeShippingThreshold,
+		};
+
+		// Calculate per-item breakdowns
+		const items: { itemIndex: number; breakdown: PricingBreakdown }[] = [];
+		let totalOrderWeightKg = 0;
+		let productionTotal = 0;
+
+		for (let i = 0; i < orderItems.length; i++) {
+			const item = orderItems[i];
+			const materialType = materialTypeMap.get(item.materialTypeId);
+
+			if (!materialType) {
+				return {
+					success: false,
+					error: `Tipo de material no encontrado: ${item.materialTypeId}`,
+				};
+			}
+
+			if (
+				!materialType.cuttingSpeed ||
+				!materialType.assistGas ||
+				!materialType.gasConsumption ||
+				!materialType.piercingTime
+			) {
+				return {
+					success: false,
+					error: `El material "${materialType.material.name}" no tiene parámetros de corte configurados.`,
+				};
+			}
+
+			// Find applicable volume discount for this item's quantity
+			let volumeDiscountRate = 0;
+			for (const vd of volumeDiscounts) {
+				if (
+					item.quantity >= vd.minQuantity &&
+					(vd.maxQuantity === null || item.quantity <= vd.maxQuantity)
+				) {
+					volumeDiscountRate = vd.discountPercentage;
+				}
+			}
+
+			const materialParams: MaterialParams = {
+				cuttingSpeed: materialType.cuttingSpeed,
+				assistGas: materialType.assistGas,
+				gasConsumption: materialType.gasConsumption,
+				piercingTime: materialType.piercingTime,
+				sheetWeight: materialType.sheetWeight ?? materialType.massPerUnit,
+				pricePerUnit: materialType.pricePerUnit,
+				sheetWidth: materialType.width,
+				sheetLength: materialType.length,
+			};
+
+			const pricingInput: PricingInput = {
+				material: materialParams,
+				config: configValues,
+				totalFixedCostPerMonth,
+				boundingBoxWidthMm: item.boundingBoxWidthMm,
+				boundingBoxHeightMm: item.boundingBoxHeightMm,
+				pieceAreaCm2: item.pieceAreaCm2,
+				cutLengthMm: item.cutLengthMm,
+				piercingCount: item.piercingCount,
+				quantity: item.quantity,
+				volumeDiscountRate,
+				isUrgent: item.isUrgent,
+			};
+
+			const breakdown = calculatePrice(pricingInput);
+			items.push({ itemIndex: i, breakdown });
+
+			totalOrderWeightKg += breakdown.pieceWeightKg * item.quantity;
+			productionTotal += breakdown.totalOrderPrice;
+		}
+
+		// Calculate order-level logistics (for internal/admin reference)
+		const logistics = calculateOrderLogistics({
+			totalOrderWeightKg,
+			maxKgPerShipment: config.maxKgPerShipment,
+			packagingCostPerShipment: config.packagingCostPerShipment,
+			dispatchCostPerOrder: config.dispatchCostPerOrder,
+			shippingCostPerOrder: config.shippingCostPerOrder,
+			paymentCommission: config.paymentCommission,
+		});
+
+		// Free shipping threshold from configurable field
+		const freeShippingThreshold = config.freeShippingThreshold;
+
+		// productionTotal now includes embedded per-kg logistics in unit prices
+		const isFreeShipping = productionTotal >= freeShippingThreshold;
+		const shippingCost = isFreeShipping
+			? 0
+			: config.paymentCommission < 1
+				? freeShippingThreshold / (1 - config.paymentCommission)
+				: freeShippingThreshold;
+
+		const grandTotal = productionTotal + shippingCost;
+
+		return {
+			success: true,
+			result: {
+				items,
+				logistics,
+				freeShippingThreshold,
+				isFreeShipping,
+				shippingCost,
+				grandTotal,
+			},
+		};
 	} catch (error: any) {
 		return { success: false, error: error.message };
 	}

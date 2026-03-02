@@ -3,6 +3,9 @@
  *
  * This is a pure calculation module with zero framework imports.
  * It accepts plain data and returns a detailed cost breakdown.
+ *
+ * calculatePrice()          → per-piece production costs (no logistics)
+ * calculateOrderLogistics() → order-level logistics (packaging, dispatch, shipping)
  */
 
 // ---------------------------------------------------------------------------
@@ -63,6 +66,9 @@ export interface PricingConfigValues {
 	// Waste
 	materialWasteFactor: number;
 	nestingSafetyMargin: number;
+
+	// Free shipping
+	freeShippingThreshold: number; // order subtotal above which shipping is free
 }
 
 export interface PricingInput {
@@ -102,22 +108,19 @@ export interface PricingBreakdown {
 	amortizationCost: number;
 	programmingCost: number;
 	setupCost: number;
-	packagingCost: number;
-	dispatchCost: number;
-	shippingCost: number;
 
 	// Aggregates
 	totalCostPerPiece: number;
 	profitPerPiece: number;
 	volumeDiscount: number; // negative value
 	urgencySurchargeAmount: number;
+	logisticsCostPerPiece: number; // per-kg logistics surcharge embedded in unit price
 	paymentCommissionAmount: number;
 	unitSalePrice: number;
 	totalOrderPrice: number;
 
 	// Metadata
-	totalOrderWeightKg: number;
-	numberOfShipments: number;
+	pieceWeightKg: number;
 	sheetAreaCm2: number;
 	pieceAreaCm2: number;
 	monthlyAmortization: number;
@@ -126,14 +129,37 @@ export interface PricingBreakdown {
 }
 
 // ---------------------------------------------------------------------------
-// Main calculation
+// Order-level logistics
+// ---------------------------------------------------------------------------
+
+export interface OrderLogisticsInput {
+	totalOrderWeightKg: number;
+	maxKgPerShipment: number;
+	packagingCostPerShipment: number;
+	dispatchCostPerOrder: number;
+	shippingCostPerOrder: number;
+	paymentCommission: number;
+}
+
+export interface OrderLogistics {
+	totalOrderWeightKg: number;
+	numberOfShipments: number;
+	packagingCost: number;
+	dispatchCost: number;
+	shippingCost: number;
+	logisticsSubtotal: number;
+	logisticsCommission: number;
+	logisticsTotal: number;
+}
+
+// ---------------------------------------------------------------------------
+// Main calculation — per-piece production costs (no logistics)
 // ---------------------------------------------------------------------------
 
 export function calculatePrice(input: PricingInput): PricingBreakdown {
 	const { material, config, totalFixedCostPerMonth } = input;
 
 	// --- Step 1: Cutting time (minutes) ---
-	// linearCutCm * 10 / cuttingSpeed = cutLengthMm / cuttingSpeed
 	const cuttingTimeMin =
 		material.cuttingSpeed > 0
 			? input.cutLengthMm / material.cuttingSpeed
@@ -211,32 +237,33 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 	const fixedCostAllocation = totalCuttingTimeMin * fixedCostPerMin;
 	const amortizationCost = totalCuttingTimeMin * amortizationPerMin;
 
-	// --- Step 13: Programming & Setup ---
-	const programmingCost = config.programmingCostPerPiece;
-	const setupCost = config.setupCostPerPiece;
+	// --- Step 13: Programming & Setup (amortized over quantity) ---
+	const programmingCost =
+		input.quantity > 0
+			? config.programmingCostPerPiece / input.quantity
+			: config.programmingCostPerPiece;
+	const setupCost =
+		input.quantity > 0
+			? config.setupCostPerPiece / input.quantity
+			: config.setupCostPerPiece;
 
-	// --- Step 14: Order weight & shipments ---
-	const totalOrderWeightKg =
+	// --- Step 14: Piece weight ---
+	const pieceWeightKg =
 		sheetAreaCm2 > 0 && material.sheetWeight > 0
-			? (pieceAreaCm2 / sheetAreaCm2) *
-				material.sheetWeight *
-				(1 + config.materialWasteFactor) *
-				input.quantity
+			? (pieceAreaCm2 / sheetAreaCm2) * material.sheetWeight
 			: 0;
-	const numberOfShipments =
-		totalOrderWeightKg > 0 && config.maxKgPerShipment > 0
-			? Math.ceil(totalOrderWeightKg / config.maxKgPerShipment)
-			: 1;
 
-	// --- Step 15: Logistics per piece ---
-	const packagingCost =
-		(numberOfShipments * config.packagingCostPerShipment) / input.quantity;
-	const dispatchCost =
-		(numberOfShipments * config.dispatchCostPerOrder) / input.quantity;
-	const shippingCost =
-		(numberOfShipments * config.shippingCostPerOrder) / input.quantity;
+	// --- Step 14b: Logistics surcharge per piece (embedded in unit price) ---
+	const logisticsCostPerKg =
+		config.maxKgPerShipment > 0
+			? (config.packagingCostPerShipment +
+					config.dispatchCostPerOrder +
+					config.shippingCostPerOrder) /
+				config.maxKgPerShipment
+			: 0;
+	const logisticsCostPerPiece = pieceWeightKg * logisticsCostPerKg;
 
-	// --- Step 16: Total cost per piece ---
+	// --- Step 15: Total cost per piece (production only) ---
 	const totalCostPerPiece =
 		gasCost +
 		energyCost +
@@ -245,43 +272,40 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 		fixedCostAllocation +
 		amortizationCost +
 		programmingCost +
-		setupCost +
-		packagingCost +
-		dispatchCost +
-		shippingCost;
+		setupCost;
 
-	// --- Step 17: Profit (margin on sale price) ---
-	// sale = cost / (1 - margin)  →  profit = sale - cost = cost × margin / (1 - margin)
+	// --- Step 16: Profit (margin on sale price) ---
 	const profitPerPiece =
 		config.profitMargin < 1
-			? (totalCostPerPiece * config.profitMargin) / (1 - config.profitMargin)
+			? (totalCostPerPiece * config.profitMargin) /
+				(1 - config.profitMargin)
 			: 0;
 
-	// --- Step 18: Volume discount ---
+	// --- Step 17: Volume discount ---
 	const volumeDiscount =
 		-(totalCostPerPiece + profitPerPiece) * input.volumeDiscountRate;
 
-	// --- Step 19: Urgency surcharge ---
+	// --- Step 18: Urgency surcharge ---
 	const urgencySurchargeAmount = input.isUrgent
 		? (totalCostPerPiece + profitPerPiece) * config.urgencySurcharge
 		: 0;
 
-	// --- Step 20: Subtotal before payment commission ---
+	// --- Step 19: Subtotal before payment commission ---
 	const subtotalPerPiece =
 		totalCostPerPiece +
 		profitPerPiece +
 		volumeDiscount +
-		urgencySurchargeAmount;
+		urgencySurchargeAmount +
+		logisticsCostPerPiece;
 
-	// --- Step 21: Payment commission (MercadoPago) ---
-	// price / (1 - commission) so that after MP deducts its %, we receive subtotal
+	// --- Step 20: Payment commission (MercadoPago) ---
 	const unitSalePrice =
 		config.paymentCommission < 1
 			? subtotalPerPiece / (1 - config.paymentCommission)
 			: subtotalPerPiece;
 	const paymentCommissionAmount = unitSalePrice - subtotalPerPiece;
 
-	// --- Step 22: Total order price ---
+	// --- Step 21: Total order price (production only) ---
 	const totalOrderPrice = unitSalePrice * input.quantity;
 
 	return {
@@ -296,22 +320,65 @@ export function calculatePrice(input: PricingInput): PricingBreakdown {
 		amortizationCost,
 		programmingCost,
 		setupCost,
-		packagingCost,
-		dispatchCost,
-		shippingCost,
 		totalCostPerPiece,
 		profitPerPiece,
 		volumeDiscount,
 		urgencySurchargeAmount,
+		logisticsCostPerPiece,
 		paymentCommissionAmount,
 		unitSalePrice,
 		totalOrderPrice,
-		totalOrderWeightKg,
-		numberOfShipments,
+		pieceWeightKg,
 		sheetAreaCm2,
 		pieceAreaCm2,
 		monthlyAmortization,
 		fixedCostPerMin,
 		amortizationPerMin,
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Order-level logistics calculation
+// ---------------------------------------------------------------------------
+
+export function calculateOrderLogistics(
+	input: OrderLogisticsInput,
+): OrderLogistics {
+	const {
+		totalOrderWeightKg,
+		maxKgPerShipment,
+		packagingCostPerShipment,
+		dispatchCostPerOrder,
+		shippingCostPerOrder,
+		paymentCommission,
+	} = input;
+
+	const numberOfShipments =
+		totalOrderWeightKg > 0 && maxKgPerShipment > 0
+			? Math.ceil(totalOrderWeightKg / maxKgPerShipment)
+			: 1;
+
+	const packagingCost = numberOfShipments * packagingCostPerShipment;
+	const dispatchCost = numberOfShipments * dispatchCostPerOrder;
+	const shippingCost = numberOfShipments * shippingCostPerOrder;
+
+	const logisticsSubtotal = packagingCost + dispatchCost + shippingCost;
+
+	// Apply payment commission to logistics as well
+	const logisticsTotal =
+		paymentCommission < 1
+			? logisticsSubtotal / (1 - paymentCommission)
+			: logisticsSubtotal;
+	const logisticsCommission = logisticsTotal - logisticsSubtotal;
+
+	return {
+		totalOrderWeightKg,
+		numberOfShipments,
+		packagingCost,
+		dispatchCost,
+		shippingCost,
+		logisticsSubtotal,
+		logisticsCommission,
+		logisticsTotal,
 	};
 }

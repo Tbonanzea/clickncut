@@ -124,36 +124,44 @@ const formulas: FormulaRow[] = [
 		step: 14,
 		name: 'Programación y setup',
 		description:
-			'Costo fijo por pieza: preparación del programa CAD/CAM + calibración de máquina.',
-		formula: 'Programación + Setup',
-		code: 'programmingCost + setupCost',
+			'Costo fijo por diseño, amortizado entre la cantidad de piezas. A más piezas, menor el costo unitario de programación y setup.',
+		formula: '(Programación + Setup) / Cantidad',
+		code: 'programmingCost/qty + setupCost/qty',
 	},
 	{
 		step: 15,
-		name: 'Peso y envíos',
+		name: 'Peso de la pieza',
 		description:
-			'Peso estimado del pedido. Si supera el máximo por envío, se divide en varios.',
-		formula: 'Peso pieza × Cant. → ceil(Peso / Máx kg)',
-		code: 'weight = pieceWt × qty; shipments = ceil(wt / maxKg)',
+			'Peso estimado de cada pieza. Se usa luego para sumar el peso total del pedido y calcular logística a nivel orden.',
+		formula: '(pieceAreaCm2 / sheetAreaCm2) × sheetWeight',
+		code: 'pieceWeightKg = (pieceAreaCm2 / sheetAreaCm2) × sheetWeight',
 	},
 	{
 		step: 16,
-		name: 'Logística / pieza',
+		name: 'Costo total / pieza',
 		description:
-			'Embalaje + despacho + flete, multiplicado por cantidad de envíos y dividido entre las piezas.',
-		formula: 'Envíos × (Embal. + Desp. + Flete) / Cant.',
-		code: 'ships × (pack + dispatch + ship) / qty',
+			'Suma de costos de producción: gas + energía + consumibles + material + fijos + amortización + servicios. No incluye logística (se calcula a nivel pedido).',
+		formula: 'Σ costos de producción',
+		code: 'gas + energy + consum + mat + fixed + amort + prog + setup',
 	},
 	{
 		step: 17,
-		name: 'Costo total / pieza',
+		name: 'Logística por pieza',
 		description:
-			'Suma de todos los costos: gas + energía + consumibles + material + fijos + amortización + servicios + logística.',
-		formula: 'Σ todos los costos anteriores',
-		code: 'gas + energy + consum + mat + fixed + amort + prog + setup + pack + disp + ship',
+			'Costo de envío embebido en el precio unitario de cada pieza, proporcional a su peso. Se calcula una tarifa por kg a partir del costo de 1 envío ÷ peso máximo por envío.',
+		formula: 'pieceWeightKg × (Embalaje + Despacho + Flete) / maxKg',
+		code: 'logisticsCostPerPiece = pieceWeightKg × (pack + dispatch + ship) / maxKgPerShipment',
 	},
 	{
 		step: 18,
+		name: 'Umbral envío gratis',
+		description:
+			'Si el subtotal del pedido (que ya incluye la logística embebida) supera este umbral, el envío se muestra como gratis. Si no, se cobra un envío explícito. Valor configurable desde el panel de admin.',
+		formula: 'Valor configurable (admin)',
+		code: 'freeShippingThreshold = config.freeShippingThreshold',
+	},
+	{
+		step: 19,
 		name: 'Ganancia',
 		description:
 			'Margen sobre precio de venta (ej: 35% significa que la ganancia es el 35% del precio final).',
@@ -161,7 +169,7 @@ const formulas: FormulaRow[] = [
 		code: 'totalCostPerPiece × profitMargin / (1 - profitMargin)',
 	},
 	{
-		step: 19,
+		step: 20,
 		name: 'Descuento volumen',
 		description:
 			'Si la cantidad cae en un rango con descuento, se aplica sobre (costo + ganancia). Valor negativo.',
@@ -169,7 +177,7 @@ const formulas: FormulaRow[] = [
 		code: '-(totalCost + profit) × discountRate',
 	},
 	{
-		step: 20,
+		step: 21,
 		name: 'Recargo urgencia',
 		description:
 			'Si es urgente (<24h), recargo porcentual sobre (costo + ganancia).',
@@ -177,15 +185,15 @@ const formulas: FormulaRow[] = [
 		code: '(totalCost + profit) × urgencySurcharge',
 	},
 	{
-		step: 21,
+		step: 22,
 		name: 'Subtotal / pieza',
 		description:
-			'Subtotal por pieza antes de comisión de pago: costo + ganancia - descuento + urgencia.',
-		formula: 'Costo + Ganancia + Desc. + Urgencia',
-		code: 'totalCostPerPiece + profitPerPiece + volumeDiscount + urgencySurchargeAmount',
+			'Subtotal por pieza antes de comisión de pago: costo + ganancia - descuento + urgencia + logística embebida.',
+		formula: 'Costo + Ganancia + Desc. + Urgencia + Logística',
+		code: 'totalCostPerPiece + profitPerPiece + volumeDiscount + urgencySurchargeAmount + logisticsCostPerPiece',
 	},
 	{
-		step: 22,
+		step: 23,
 		name: 'Comisión MercadoPago',
 		description:
 			'Se ajusta el precio para absorber la comisión de MercadoPago (ej: 6%), de modo que después del descuento de MP se recibe el subtotal deseado.',
@@ -193,7 +201,7 @@ const formulas: FormulaRow[] = [
 		code: 'unitSalePrice = subtotalPerPiece / (1 - paymentCommission)',
 	},
 	{
-		step: 23,
+		step: 24,
 		name: 'Precio total',
 		description: 'Precio unitario multiplicado por la cantidad de piezas.',
 		formula: 'Precio unit. × Cantidad',
