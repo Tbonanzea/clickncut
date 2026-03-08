@@ -177,6 +177,7 @@ export function useSubmitOrder() {
 					items: orderItems,
 					extras: cart.extras,
 					logisticsCost,
+					paymentMethod: checkoutData.paymentMethod,
 					// Billing
 					invoiceType: checkoutData.invoiceType,
 					customerName:

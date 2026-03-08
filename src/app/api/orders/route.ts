@@ -31,6 +31,7 @@ const CreateOrderSchema = z.object({
 	items: z.array(OrderItemSchema).min(1, 'At least one item is required'),
 	extras: z.array(z.string().uuid()).optional(),
 	logisticsCost: z.number().min(0).optional().default(0),
+	paymentMethod: z.enum(['mercadopago', 'transfer']).optional(),
 	// Billing
 	invoiceType: z.enum(['CONSUMIDOR_FINAL', 'FACTURA_A']).optional().default('CONSUMIDOR_FINAL'),
 	customerName: z.string().optional(),
@@ -188,29 +189,32 @@ export async function POST(request: NextRequest) {
 			},
 		});
 
-		// Send confirmation emails (non-blocking)
-		const emailData = {
-			orderId: order.id,
-			customerEmail: order.user.email,
-			customerName: order.user.firstName
-				? `${order.user.firstName} ${order.user.lastName || ''}`
-				: undefined,
-			totalPrice: order.totalPrice,
-			items: order.items.map((item) => ({
-				filename: item.file.filename,
-				materialName: item.materialType.material.name,
-				materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
-				quantity: item.quantity,
-				price: item.price,
-			})),
-			extras: order.extras.map((e) => e.extraService.name),
-		};
+		// Only send initial confirmation email for bank transfers.
+		// For MercadoPago, the confirmation email is sent by the webhook
+		// after the payment is successfully completed. This prevents sending
+		// "Pedido Confirmado" emails when the payment later fails.
+		if (validatedData.paymentMethod !== 'mercadopago') {
+			const emailData = {
+				orderId: order.id,
+				customerEmail: order.user.email,
+				customerName: order.user.firstName
+					? `${order.user.firstName} ${order.user.lastName || ''}`
+					: undefined,
+				totalPrice: order.totalPrice,
+				items: order.items.map((item) => ({
+					filename: item.file.filename,
+					materialName: item.materialType.material.name,
+					materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
+					quantity: item.quantity,
+					price: item.price,
+				})),
+				extras: order.extras.map((e) => e.extraService.name),
+			};
 
-		// Send customer confirmation email asynchronously (don't block response)
-		// Admin notification is sent later when payment is confirmed
-		sendCustomerConfirmationEmail(emailData).catch((error) => {
-			console.error('Error sending customer email:', error);
-		});
+			sendCustomerConfirmationEmail(emailData).catch((error) => {
+				console.error('Error sending customer email:', error);
+			});
+		}
 
 		return NextResponse.json(
 			{
