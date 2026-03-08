@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { paymentApi, mapMercadoPagoStatus } from '@/lib/mercadopago';
-import { sendPaymentConfirmationEmail } from '@/lib/email';
+import { sendPaymentConfirmationEmail, sendAdminNotificationEmail } from '@/lib/email';
 
 /**
  * POST /api/webhooks/mercadopago
@@ -92,6 +92,11 @@ async function handlePaymentNotification(mpPaymentId: string) {
 								},
 							},
 						},
+						extras: {
+							include: {
+								extraService: true,
+							},
+						},
 					},
 				},
 			},
@@ -128,26 +133,40 @@ async function handlePaymentNotification(mpPaymentId: string) {
 				data: { status: 'PAID' },
 			});
 
-			// Send payment confirmation email
+			const emailItems = payment.order.items.map((item) => ({
+				filename: item.file.filename,
+				materialName: item.materialType.material.name,
+				materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
+				quantity: item.quantity,
+				price: item.price,
+			}));
+
+			const customerName = payment.order.user.firstName
+				? `${payment.order.user.firstName} ${payment.order.user.lastName || ''}`
+				: undefined;
+
+			// Send payment confirmation and admin notification emails
 			try {
-				await sendPaymentConfirmationEmail({
-					orderId: payment.order.id,
-					customerEmail: payment.order.user.email,
-					customerName: payment.order.user.firstName
-						? `${payment.order.user.firstName} ${payment.order.user.lastName || ''}`
-						: undefined,
-					totalPrice: payment.amount,
-					paymentMethod: 'MercadoPago',
-					items: payment.order.items.map((item) => ({
-						filename: item.file.filename,
-						materialName: item.materialType.material.name,
-						materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
-						quantity: item.quantity,
-						price: item.price,
-					})),
-				});
+				await Promise.all([
+					sendPaymentConfirmationEmail({
+						orderId: payment.order.id,
+						customerEmail: payment.order.user.email,
+						customerName,
+						totalPrice: payment.amount,
+						paymentMethod: 'MercadoPago',
+						items: emailItems,
+					}),
+					sendAdminNotificationEmail({
+						orderId: payment.order.id,
+						customerEmail: payment.order.user.email,
+						customerName,
+						totalPrice: payment.order.totalPrice,
+						items: emailItems,
+						extras: payment.order.extras.map((e) => e.extraService.name),
+					}),
+				]);
 			} catch (emailError) {
-				console.error('Error sending payment confirmation email:', emailError);
+				console.error('Error sending emails:', emailError);
 			}
 
 			console.log('Order marked as PAID:', orderId);

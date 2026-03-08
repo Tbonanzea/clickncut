@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import {
-	sendCustomerConfirmationEmail,
-	sendAdminNotificationEmail,
-} from '@/lib/email';
+import { sendCustomerConfirmationEmail } from '@/lib/email';
 
 /**
  * Zod schema for file data
@@ -209,13 +206,10 @@ export async function POST(request: NextRequest) {
 			extras: order.extras.map((e) => e.extraService.name),
 		};
 
-		// Send emails asynchronously (don't block response)
-		Promise.all([
-			sendCustomerConfirmationEmail(emailData),
-			sendAdminNotificationEmail(emailData),
-		]).catch((error) => {
-			console.error('Error sending emails:', error);
-			// Don't fail the request if emails fail
+		// Send customer confirmation email asynchronously (don't block response)
+		// Admin notification is sent later when payment is confirmed
+		sendCustomerConfirmationEmail(emailData).catch((error) => {
+			console.error('Error sending customer email:', error);
 		});
 
 		return NextResponse.json(

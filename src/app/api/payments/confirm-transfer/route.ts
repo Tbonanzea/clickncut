@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
-import { sendPaymentConfirmationEmail } from '@/lib/email';
+import { sendPaymentConfirmationEmail, sendAdminNotificationEmail } from '@/lib/email';
 
 const ConfirmTransferSchema = z.object({
 	paymentId: z.string().uuid(),
@@ -70,6 +70,11 @@ export async function POST(request: NextRequest) {
 								},
 							},
 						},
+						extras: {
+							include: {
+								extraService: true,
+							},
+						},
 					},
 				},
 			},
@@ -110,26 +115,40 @@ export async function POST(request: NextRequest) {
 			}),
 		]);
 
-		// Send confirmation email to customer
+		// Send confirmation emails
 		try {
-			await sendPaymentConfirmationEmail({
-				orderId: payment.order.id,
-				customerEmail: payment.order.user.email,
-				customerName: payment.order.user.firstName
-					? `${payment.order.user.firstName} ${payment.order.user.lastName || ''}`
-					: undefined,
-				totalPrice: payment.amount,
-				paymentMethod: 'Transferencia Bancaria',
-				items: payment.order.items.map((item) => ({
-					filename: item.file.filename,
-					materialName: item.materialType.material.name,
-					materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
-					quantity: item.quantity,
-					price: item.price,
-				})),
-			});
+			const emailItems = payment.order.items.map((item) => ({
+				filename: item.file.filename,
+				materialName: item.materialType.material.name,
+				materialType: `${item.materialType.width}x${item.materialType.length}x${item.materialType.height}mm`,
+				quantity: item.quantity,
+				price: item.price,
+			}));
+
+			const customerName = payment.order.user.firstName
+				? `${payment.order.user.firstName} ${payment.order.user.lastName || ''}`
+				: undefined;
+
+			await Promise.all([
+				sendPaymentConfirmationEmail({
+					orderId: payment.order.id,
+					customerEmail: payment.order.user.email,
+					customerName,
+					totalPrice: payment.amount,
+					paymentMethod: 'Transferencia Bancaria',
+					items: emailItems,
+				}),
+				sendAdminNotificationEmail({
+					orderId: payment.order.id,
+					customerEmail: payment.order.user.email,
+					customerName,
+					totalPrice: payment.order.totalPrice,
+					items: emailItems,
+					extras: payment.order.extras.map((e) => e.extraService.name),
+				}),
+			]);
 		} catch (emailError) {
-			console.error('Error sending payment confirmation email:', emailError);
+			console.error('Error sending emails:', emailError);
 		}
 
 		return NextResponse.json({
