@@ -154,8 +154,6 @@ function computeStepValidity(
 				items.length > 0 &&
 				items.every((item) => !!item.material && !!item.materialType)
 			);
-		case 'extras':
-			return true;
 		case 'checkout':
 			if (!checkoutData) return false;
 			const hasPayment = !!checkoutData.paymentMethod;
@@ -188,13 +186,6 @@ const steps: QuotingStep[] = [
 		path: '/quoting/material',
 		completed: false,
 		required: true,
-	},
-	{
-		id: 'extras',
-		name: 'Extras',
-		path: '/quoting/extras',
-		completed: false,
-		required: false,
 	},
 	{
 		id: 'checkout',
