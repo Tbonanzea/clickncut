@@ -355,9 +355,10 @@ export default function OrderDetailPage() {
 												className="h-6 w-6 p-0"
 											>
 												<a
-													href={item.file.filepath}
+													href={`/api/file?key=${encodeURIComponent(item.file.filepath)}`}
 													target="_blank"
 													rel="noopener noreferrer"
+													download={item.file.filename}
 												>
 													<ExternalLink className="h-3 w-3" />
 												</a>

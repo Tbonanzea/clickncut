@@ -46,7 +46,7 @@ export default async function MyOrdersPage({
 						<div className="text-center py-12">
 							<p className="text-muted-foreground mb-4">No tienes órdenes todavía</p>
 							<Button asChild>
-								<Link href="/quoting">Crear cotización</Link>
+								<Link href="/quoting">Ir al cotizador</Link>
 							</Button>
 						</div>
 					) : (

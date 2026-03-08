@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/format';
 
 export const metadata: Metadata = {
 	title: 'Configuración de Precios',
-	description: 'Administración de costos, variables y márgenes de cotización',
+	description: 'Administración de costos, variables y márgenes de precios',
 };
 
 export default async function PricingPage() {
@@ -48,7 +48,7 @@ export default async function PricingPage() {
 				</h1>
 				<p className='text-sm text-muted-foreground mt-1'>
 					Costos fijos, variables de producción, márgenes y
-					descuentos para la cotización automática
+					descuentos para el cálculo automático de precios
 				</p>
 			</div>
 

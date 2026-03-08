@@ -104,18 +104,31 @@ model CartItem {
 }
 
 model Order {
-  id            String       @id @default(uuid())
-  userId        String
-  status        OrderStatus  @default(PENDING)
-  totalPrice    Float
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  logisticsCost Float        @default(0)
-  user          User         @relation(fields: [userId], references: [id])
-  extras        OrderExtra[]
-  items         OrderItem[]
-  payments      Payment[]
-  shipments     Shipment[]
+  id               String       @id @default(uuid())
+  userId           String
+  status           OrderStatus  @default(PENDING)
+  totalPrice       Float
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  logisticsCost    Float        @default(0)
+  businessName     String?
+  cuit             String?
+
+  customerName     String?
+  customerPhone    String?
+  dni              String?
+  invoiceType      InvoiceType  @default(CONSUMIDOR_FINAL)
+  shippingAddress  String?
+  shippingCity     String?
+  shippingNotes    String?
+  shippingProvince String?
+  shippingZipCode  String?
+  taxCondition     String?
+  user             User         @relation(fields: [userId], references: [id])
+  extras           OrderExtra[]
+  items            OrderItem[]
+  payments         Payment[]
+  shipments        Shipment[]
 }
 
 model OrderItem {
@@ -286,6 +299,11 @@ enum UserRole {
 enum FileType {
   DXF
   OTHER
+}
+
+enum InvoiceType {
+  CONSUMIDOR_FINAL
+  FACTURA_A
 }
 
 enum OrderStatus {

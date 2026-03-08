@@ -63,6 +63,25 @@ export interface QuotingCart {
 	extras: string[]; // Array of extra service IDs
 }
 
+export type InvoiceType = 'CONSUMIDOR_FINAL' | 'FACTURA_A';
+export type CheckoutPaymentMethod = 'mercadopago' | 'transfer' | null;
+
+export interface CheckoutData {
+	invoiceType: InvoiceType;
+	customerName: string;
+	customerPhone: string;
+	dni: string;
+	cuit: string;
+	businessName: string;
+	taxCondition: string;
+	shippingAddress: string;
+	shippingCity: string;
+	shippingProvince: string;
+	shippingZipCode: string;
+	shippingNotes: string;
+	paymentMethod: CheckoutPaymentMethod;
+}
+
 export interface QuotingStep {
 	id: string;
 	name: string;
@@ -71,10 +90,27 @@ export interface QuotingStep {
 	required: boolean;
 }
 
+const initialCheckoutData: CheckoutData = {
+	invoiceType: 'CONSUMIDOR_FINAL',
+	customerName: '',
+	customerPhone: '',
+	dni: '',
+	cuit: '',
+	businessName: '',
+	taxCondition: '',
+	shippingAddress: '',
+	shippingCity: '',
+	shippingProvince: '',
+	shippingZipCode: '',
+	shippingNotes: '',
+	paymentMethod: null,
+};
+
 interface State {
 	currentStep: number;
 	steps: QuotingStep[];
 	cart: QuotingCart;
+	checkoutData: CheckoutData;
 	isLoading: boolean;
 	errors: Record<string, string>;
 }
@@ -89,17 +125,19 @@ type Action =
 	  }
 	| { type: 'REMOVE_ITEM'; payload: number }
 	| { type: 'SET_EXTRAS'; payload: string[] }
+	| { type: 'SET_CHECKOUT_DATA'; payload: Partial<CheckoutData> }
 	| { type: 'MARK_STEP'; payload: { stepId: string; completed: boolean } }
 	| { type: 'SET_LOADING'; payload: boolean }
 	| { type: 'SET_ERROR'; payload: { field: string; error: string } }
 	| { type: 'CLEAR_ERROR'; payload: string }
 	| { type: 'RESET' };
 
-// Compute step validity dynamically from actual cart data
+// Compute step validity dynamically from actual cart/checkout data
 // instead of relying on cached `completed` flags
 function computeStepValidity(
 	stepId: string,
-	items: QuotingCartItem[]
+	items: QuotingCartItem[],
+	checkoutData?: CheckoutData
 ): boolean {
 	switch (stepId) {
 		case 'file-upload':
@@ -118,17 +156,19 @@ function computeStepValidity(
 			);
 		case 'extras':
 			return true;
-		case 'review':
-			return (
-				items.length > 0 &&
-				items.every(
-					(item) =>
-						!!item.file &&
-						!!item.material &&
-						!!item.materialType &&
-						item.quantity > 0
-				)
-			);
+		case 'checkout':
+			if (!checkoutData) return false;
+			const hasPayment = !!checkoutData.paymentMethod;
+			const hasShipping =
+				!!checkoutData.shippingAddress &&
+				!!checkoutData.shippingCity &&
+				!!checkoutData.shippingProvince &&
+				!!checkoutData.shippingZipCode;
+			const hasBilling =
+				checkoutData.invoiceType === 'CONSUMIDOR_FINAL'
+					? !!checkoutData.customerName && !!checkoutData.dni
+					: !!checkoutData.businessName && !!checkoutData.cuit;
+			return hasPayment && hasShipping && hasBilling;
 		default:
 			return true;
 	}
@@ -157,9 +197,9 @@ const steps: QuotingStep[] = [
 		required: false,
 	},
 	{
-		id: 'review',
-		name: 'Revisión',
-		path: '/quoting/review',
+		id: 'checkout',
+		name: 'Revisión y Pago',
+		path: '/quoting/checkout',
 		completed: false,
 		required: true,
 	},
@@ -169,6 +209,7 @@ const initialState: State = {
 	currentStep: 0,
 	steps: steps,
 	cart: { items: [], extras: [] },
+	checkoutData: initialCheckoutData,
 	isLoading: false,
 	errors: {},
 };
@@ -218,6 +259,12 @@ function reducer(state: State, action: Action): State {
 				},
 			};
 
+		case 'SET_CHECKOUT_DATA':
+			return {
+				...state,
+				checkoutData: { ...state.checkoutData, ...action.payload },
+			};
+
 		case 'MARK_STEP':
 			return {
 				...state,
@@ -263,6 +310,7 @@ interface QuotingContextType extends State {
 	removeItem: (index: number) => void;
 	clearCart: () => void;
 	setExtras: (extras: string[]) => void;
+	setCheckoutData: (data: Partial<CheckoutData>) => void;
 	markStep: (id: string, completed?: boolean) => void;
 	setLoading: (v: boolean) => void;
 	setError: (field: string, error: string) => void;
@@ -298,7 +346,7 @@ function useQuotingInternal(): QuotingContextType {
 			for (let i = 0; i < idx; i++) {
 				if (
 					state.steps[i].required &&
-					!computeStepValidity(state.steps[i].id, state.cart.items)
+					!computeStepValidity(state.steps[i].id, state.cart.items, state.checkoutData)
 				) {
 					router.replace(state.steps[i].path);
 					return;
@@ -309,7 +357,7 @@ function useQuotingInternal(): QuotingContextType {
 		if (idx !== state.currentStep) {
 			dispatch({ type: 'SET_STEP', payload: idx });
 		}
-	}, [pathname, state.steps, state.currentStep, state.cart.items, router]);
+	}, [pathname, state.steps, state.currentStep, state.cart.items, state.checkoutData, router]);
 
 	// When cart items change, invalidate completed steps that:
 	// 1. Have data that is no longer valid, OR
@@ -318,7 +366,7 @@ function useQuotingInternal(): QuotingContextType {
 	useEffect(() => {
 		state.steps.forEach((step, index) => {
 			if (!step.completed) return;
-			const valid = computeStepValidity(step.id, state.cart.items);
+			const valid = computeStepValidity(step.id, state.cart.items, state.checkoutData);
 			if (!valid || index > state.currentStep) {
 				dispatch({
 					type: 'MARK_STEP',
@@ -357,7 +405,8 @@ function useQuotingInternal(): QuotingContextType {
 			for (let i = state.currentStep + 1; i < idx; i++) {
 				const valid = computeStepValidity(
 					state.steps[i].id,
-					state.cart.items
+					state.cart.items,
+					state.checkoutData,
 				);
 				markStep(state.steps[i].id, valid);
 			}
@@ -383,6 +432,9 @@ function useQuotingInternal(): QuotingContextType {
 	const setExtras = (extras: string[]) =>
 		dispatch({ type: 'SET_EXTRAS', payload: extras });
 
+	const setCheckoutData = (data: Partial<CheckoutData>) =>
+		dispatch({ type: 'SET_CHECKOUT_DATA', payload: data });
+
 	const markStep = (id: string, completed = true) =>
 		dispatch({ type: 'MARK_STEP', payload: { stepId: id, completed } });
 
@@ -404,7 +456,7 @@ function useQuotingInternal(): QuotingContextType {
 		for (let i = 0; i < toStep; i++) {
 			if (
 				state.steps[i].required &&
-				!computeStepValidity(state.steps[i].id, state.cart.items)
+				!computeStepValidity(state.steps[i].id, state.cart.items, state.checkoutData)
 			)
 				return false;
 		}
@@ -431,16 +483,8 @@ function useQuotingInternal(): QuotingContextType {
 						(item) => !!item.material && !!item.materialType
 					);
 				break;
-			case 'review':
-				isValid =
-					state.cart.items.length > 0 &&
-					state.cart.items.every(
-						(item) =>
-							!!item.file &&
-							!!item.material &&
-							!!item.materialType &&
-							item.quantity > 0
-					);
+			case 'checkout':
+				isValid = computeStepValidity('checkout', state.cart.items, state.checkoutData);
 				break;
 			default:
 				isValid = true;
@@ -461,6 +505,7 @@ function useQuotingInternal(): QuotingContextType {
 		removeItem,
 		clearCart,
 		setExtras,
+		setCheckoutData,
 		markStep,
 		setLoading,
 		setError,

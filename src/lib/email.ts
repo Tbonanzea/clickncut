@@ -69,18 +69,18 @@ export async function sendCustomerConfirmationEmail(data: OrderEmailData) {
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151; max-width: 600px; margin: 0 auto; padding: 20px;">
 			<div style="background-color: #f9fafb; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
 				<h1 style="color: #059669; margin: 0 0 8px 0; font-size: 24px;">
-					✓ Cotización Recibida
+					✓ Pedido Recibido
 				</h1>
 				<p style="margin: 0; color: #6b7280;">
-					Tu solicitud ha sido enviada exitosamente
+					Tu pedido ha sido registrado exitosamente
 				</p>
 			</div>
 
 			<div style="margin-bottom: 24px;">
 				<p>Hola ${customerName || 'Cliente'},</p>
 				<p>
-					Hemos recibido tu solicitud de cotización y nuestro equipo está revisando tu proyecto.
-					Te enviaremos una cotización detallada en las próximas 24-48 horas.
+					Hemos recibido tu pedido y nuestro equipo está preparando tu proyecto.
+					Te mantendremos informado sobre el estado de tu orden.
 				</p>
 			</div>
 
@@ -90,7 +90,7 @@ export async function sendCustomerConfirmationEmail(data: OrderEmailData) {
 					<strong style="font-family: monospace;">#${orderId.slice(0, 8).toUpperCase()}</strong>
 				</div>
 				<div style="display: flex; justify-content: space-between;">
-					<span style="color: #6b7280;">Total Estimado:</span>
+					<span style="color: #6b7280;">Total:</span>
 					<strong style="color: #059669;">$${totalPrice.toFixed(2)}</strong>
 				</div>
 			</div>
@@ -119,10 +119,10 @@ export async function sendCustomerConfirmationEmail(data: OrderEmailData) {
 			<div style="background-color: #eff6ff; padding: 16px; border-radius: 8px; margin-top: 24px;">
 				<h3 style="color: #1e40af; margin-top: 0;">Próximos Pasos</h3>
 				<ol style="margin: 0; padding-left: 20px; color: #1f2937;">
-					<li>Recibirás una cotización detallada en 24-48 horas</li>
-					<li>Podrás aprobar la cotización y proceder con el pago</li>
-					<li>Iniciaremos la producción una vez confirmado el pago</li>
-					<li>Te mantendremos informado sobre el estado de tu orden</li>
+					<li>Nuestro equipo revisará los archivos de tu pedido</li>
+					<li>Iniciaremos la producción a la brevedad</li>
+					<li>Te notificaremos cuando tu pedido esté listo para envío</li>
+					<li>Podrás seguir el estado de tu orden en tu cuenta</li>
 				</ol>
 			</div>
 
@@ -146,7 +146,7 @@ export async function sendCustomerConfirmationEmail(data: OrderEmailData) {
 		const { data, error } = await resend.emails.send({
 			from: 'ClicknCut <orders@clickncut.app>', // TODO: Update with actual domain
 			to: [customerEmail],
-			subject: `Cotización Recibida - Orden #${orderId.slice(0, 8).toUpperCase()}`,
+			subject: `Pedido Confirmado - Orden #${orderId.slice(0, 8).toUpperCase()}`,
 			html,
 		});
 
@@ -357,10 +357,10 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151; max-width: 600px; margin: 0 auto; padding: 20px;">
 			<div style="background-color: #fef3c7; padding: 24px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
 				<h1 style="color: #92400e; margin: 0 0 8px 0; font-size: 24px;">
-					🔔 Nueva Cotización Recibida
+					🔔 Nuevo Pedido Recibido
 				</h1>
 				<p style="margin: 0; color: #78350f;">
-					Un nuevo cliente ha solicitado una cotización
+					Un nuevo cliente ha realizado un pedido
 				</p>
 			</div>
 
@@ -379,7 +379,7 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 					<strong style="font-family: monospace;">#${orderId.slice(0, 8).toUpperCase()}</strong>
 				</div>
 				<div style="display: flex; justify-content: space-between;">
-					<span style="color: #6b7280;">Total Estimado:</span>
+					<span style="color: #6b7280;">Total:</span>
 					<strong style="color: #059669; font-size: 18px;">$${totalPrice.toFixed(2)}</strong>
 				</div>
 			</div>
@@ -410,8 +410,8 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 				<ol style="margin: 0; padding-left: 20px; color: #1f2937;">
 					<li>Revisar los archivos DXF adjuntos</li>
 					<li>Verificar disponibilidad de materiales</li>
-					<li>Preparar cotización detallada</li>
-					<li>Enviar cotización al cliente en 24-48 horas</li>
+					<li>Preparar el pedido para producción</li>
+					<li>Notificar al cliente cuando esté listo para envío</li>
 				</ol>
 			</div>
 
@@ -441,7 +441,7 @@ export async function sendAdminNotificationEmail(data: OrderEmailData) {
 		const { data, error } = await resend.emails.send({
 			from: 'ClicknCut System <system@clickncut.app>', // TODO: Update with actual domain
 			to: [adminEmail],
-			subject: `Nueva Cotización - Orden #${orderId.slice(0, 8).toUpperCase()} - $${totalPrice.toFixed(2)}`,
+			subject: `Nuevo Pedido - Orden #${orderId.slice(0, 8).toUpperCase()} - $${totalPrice.toFixed(2)}`,
 			html,
 		});
 

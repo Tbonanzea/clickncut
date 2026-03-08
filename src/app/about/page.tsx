@@ -224,7 +224,7 @@ export default function AboutPage() {
 						¿Listo para crear tu próximo proyecto?
 					</h2>
 					<p className='text-lg text-primary-foreground/90 max-w-2xl mx-auto'>
-						Sube tu diseño y obtené una cotización instantánea. Es gratis y sin
+						Sube tu diseño y obtené tu cotización instantánea. Es gratis y sin
 						compromiso.
 					</p>
 					<Button asChild size='lg' variant='secondary' className='text-base'>

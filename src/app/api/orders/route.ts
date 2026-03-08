@@ -32,8 +32,22 @@ const OrderItemSchema = z.object({
  */
 const CreateOrderSchema = z.object({
 	items: z.array(OrderItemSchema).min(1, 'At least one item is required'),
-	extras: z.array(z.string().uuid()).optional(), // Array of ExtraService IDs
+	extras: z.array(z.string().uuid()).optional(),
 	logisticsCost: z.number().min(0).optional().default(0),
+	// Billing
+	invoiceType: z.enum(['CONSUMIDOR_FINAL', 'FACTURA_A']).optional().default('CONSUMIDOR_FINAL'),
+	customerName: z.string().optional(),
+	customerPhone: z.string().optional(),
+	dni: z.string().optional(),
+	cuit: z.string().optional(),
+	businessName: z.string().optional(),
+	taxCondition: z.string().optional(),
+	// Shipping
+	shippingAddress: z.string().optional(),
+	shippingCity: z.string().optional(),
+	shippingProvince: z.string().optional(),
+	shippingZipCode: z.string().optional(),
+	shippingNotes: z.string().optional(),
 });
 
 /**
@@ -119,13 +133,27 @@ export async function POST(request: NextRequest) {
 			})
 		);
 
-		// Create order with items and extras in a transaction
+		// Create order with items, extras, and billing/shipping data
 		const order = await prisma.order.create({
 			data: {
 				userId: user.id,
 				status: 'PENDING',
 				totalPrice,
 				logisticsCost: validatedData.logisticsCost,
+				// Billing
+				invoiceType: validatedData.invoiceType,
+				customerName: validatedData.customerName,
+				customerPhone: validatedData.customerPhone,
+				dni: validatedData.dni,
+				cuit: validatedData.cuit,
+				businessName: validatedData.businessName,
+				taxCondition: validatedData.taxCondition,
+				// Shipping
+				shippingAddress: validatedData.shippingAddress,
+				shippingCity: validatedData.shippingCity,
+				shippingProvince: validatedData.shippingProvince,
+				shippingZipCode: validatedData.shippingZipCode,
+				shippingNotes: validatedData.shippingNotes,
 				items: {
 					create: processedItems,
 				},

@@ -19,10 +19,10 @@ export type PaymentMethod = 'MERCADOPAGO' | 'TRANSFER';
 
 // Bank transfer information
 export const BANK_INFO = {
-	holder: process.env.BANK_ACCOUNT_HOLDER || '',
-	cbu: process.env.BANK_ACCOUNT_CBU || '',
-	alias: process.env.BANK_ACCOUNT_ALIAS || '',
-	bank: process.env.BANK_NAME || '',
+	holder: process.env.NEXT_PUBLIC_BANK_HOLDER || '',
+	cbu: process.env.NEXT_PUBLIC_BANK_CBU || '',
+	alias: process.env.NEXT_PUBLIC_BANK_ALIAS || '',
+	bank: process.env.NEXT_PUBLIC_BANK_NAME || '',
 	accountType: 'Cuenta Corriente',
 } as const;
 

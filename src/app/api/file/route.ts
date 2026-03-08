@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/prisma';
 
 const BUCKET_NAME = 'dxf-files';
 
 /**
  * GET /api/file?key=path/to/file
  * Downloads a file from Supabase Storage
+ * Requires authentication: user must own the file or be an admin
  */
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -20,6 +22,36 @@ export async function GET(request: Request) {
 	}
 
 	try {
+		// Authenticate user
+		const supabaseAuth = await createClient();
+		const {
+			data: { user },
+		} = await supabaseAuth.auth.getUser();
+
+		if (!user) {
+			return NextResponse.json(
+				{ error: 'Authentication required' },
+				{ status: 401 }
+			);
+		}
+
+		// Check ownership: storage path starts with userId/
+		const fileOwnerId = key.split('/')[0];
+		if (fileOwnerId !== user.id) {
+			// Check if user is admin
+			const dbUser = await prisma.user.findUnique({
+				where: { id: user.id },
+				select: { role: true },
+			});
+
+			if (!dbUser || dbUser.role !== 'ADMIN') {
+				return NextResponse.json(
+					{ error: 'Forbidden' },
+					{ status: 403 }
+				);
+			}
+		}
+
 		const supabase = createAdminClient();
 
 		// Download file from Supabase Storage

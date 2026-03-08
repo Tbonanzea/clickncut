@@ -347,10 +347,10 @@ function findShippingTier(
 }
 
 // ---------------------------------------------------------------------------
-// Quote price computation (called from quoting flow)
+// Item price computation (called from order flow)
 // ---------------------------------------------------------------------------
 
-export async function computeQuotePrice(input: {
+export async function computeItemPrice(input: {
 	materialTypeId: string;
 	boundingBoxWidthMm: number;
 	boundingBoxHeightMm: number;

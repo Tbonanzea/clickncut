@@ -902,11 +902,11 @@ export default function GuidelinesPage() {
 			<section className='py-16 md:py-20 bg-primary text-primary-foreground'>
 				<div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8'>
 					<h2 className='text-3xl md:text-4xl font-bold tracking-tight'>
-						¿Listo para cotizar tu proyecto?
+						¿Listo para hacer tu pedido?
 					</h2>
 					<p className='text-lg text-primary-foreground/90 max-w-2xl mx-auto'>
 						Ahora que conocés las pautas de diseño, subí tu archivo DXF y
-						obtené una cotización instantánea. Es gratis y sin compromiso.
+						obtené tu cotización instantánea. Es gratis y sin compromiso.
 					</p>
 					<Button asChild size='lg' variant='secondary' className='text-base'>
 						<Link href='/quoting'>

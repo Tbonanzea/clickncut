@@ -152,7 +152,7 @@ export default function Home() {
 									<CardHeader className='pb-3'>
 										<div className='flex items-center justify-between'>
 											<CardTitle className='text-sm'>
-												Cotización
+												Tu Pedido
 											</CardTitle>
 											<Badge variant='secondary'>
 												Listo
@@ -254,10 +254,10 @@ export default function Home() {
 
 								<div className='space-y-2'>
 									<h3 className='text-xl font-semibold'>
-										Recibe cotización
+										Pagá y listo
 									</h3>
 									<p className='text-muted-foreground text-sm leading-relaxed'>
-										Precio instantáneo y transparente.
+										Precio final y transparente.
 										Agrega grabado, pintura o ensamblaje si
 										quieres.
 									</p>

@@ -216,10 +216,10 @@ export function FormulasTab() {
 				<CardHeader className='pb-3'>
 					<CardTitle className='text-sm font-medium flex items-center gap-2'>
 						<Calculator className='h-4 w-4 text-muted-foreground' />
-						Motor de Cotización — Tabla de Fórmulas
+						Motor de Precios — Tabla de Fórmulas
 					</CardTitle>
 					<p className='text-xs text-muted-foreground'>
-						Cada fila es un paso del cálculo automático de cotización.
+						Cada fila es un paso del cálculo automático de precios.
 						Se ejecutan en orden usando los valores de las otras pestañas.
 					</p>
 				</CardHeader>

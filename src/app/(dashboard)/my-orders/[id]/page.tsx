@@ -27,12 +27,46 @@ import {
 	XCircle,
 	Package,
 	Truck,
+	Copy,
+	Check,
+	MessageCircle,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatPrice } from '@/lib/format';
+
+const bankInfo = {
+	holder: process.env.NEXT_PUBLIC_BANK_HOLDER || '',
+	cbu: process.env.NEXT_PUBLIC_BANK_CBU || '',
+	alias: process.env.NEXT_PUBLIC_BANK_ALIAS || '',
+	bank: process.env.NEXT_PUBLIC_BANK_NAME || '',
+};
+
+function CopyButton({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = async () => {
+		await navigator.clipboard.writeText(text);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	};
+
+	return (
+		<button
+			onClick={handleCopy}
+			className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
+			title="Copiar"
+		>
+			{copied ? (
+				<Check className="h-4 w-4 text-green-600" />
+			) : (
+				<Copy className="h-4 w-4" />
+			)}
+		</button>
+	);
+}
 
 // Type alias for the component
 type OrderWithDetails = MyOrderWithDetails;
@@ -257,9 +291,10 @@ export default function MyOrderDetailPage() {
 												className="h-6 w-6 p-0"
 											>
 												<a
-													href={item.file.filepath}
+													href={`/api/file?key=${encodeURIComponent(item.file.filepath)}`}
 													target="_blank"
 													rel="noopener noreferrer"
+													download={item.file.filename}
 												>
 													<ExternalLink className="h-3 w-3" />
 												</a>
@@ -404,6 +439,91 @@ export default function MyOrderDetailPage() {
 					)}
 				</CardContent>
 			</Card>
+
+			{/* Pending Transfer — Bank Details + WhatsApp */}
+			{order.payments?.some(
+				(p) => p.paymentMethod === 'TRANSFER' && p.status === 'PENDING'
+			) && (
+				<Card className="border-yellow-200 bg-yellow-50/50">
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2 text-yellow-900">
+							<Building2 className="h-5 w-5" />
+							Datos para la transferencia
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-3">
+						{bankInfo.holder && (
+							<div>
+								<p className="text-sm text-muted-foreground">Titular</p>
+								<p className="font-medium">{bankInfo.holder}</p>
+							</div>
+						)}
+
+						{bankInfo.cbu && (
+							<>
+								<Separator />
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="text-sm text-muted-foreground">CBU</p>
+										<p className="font-mono font-medium">{bankInfo.cbu}</p>
+									</div>
+									<CopyButton text={bankInfo.cbu} />
+								</div>
+							</>
+						)}
+
+						{bankInfo.alias && (
+							<>
+								<Separator />
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="text-sm text-muted-foreground">Alias</p>
+										<p className="font-medium">{bankInfo.alias}</p>
+									</div>
+									<CopyButton text={bankInfo.alias} />
+								</div>
+							</>
+						)}
+
+						{bankInfo.bank && (
+							<>
+								<Separator />
+								<div>
+									<p className="text-sm text-muted-foreground">Banco</p>
+									<p className="font-medium">{bankInfo.bank}</p>
+								</div>
+							</>
+						)}
+
+						<Separator />
+						<div className="flex items-center justify-between">
+							<div>
+								<p className="text-sm text-muted-foreground">Monto a transferir</p>
+								<p className="font-bold text-lg text-emerald-600">
+									{formatPrice(order.totalPrice, 2)}
+								</p>
+							</div>
+							<CopyButton text={order.totalPrice.toFixed(2)} />
+						</div>
+
+						<Separator />
+						<Button
+							className="w-full bg-green-600 hover:bg-green-700 text-white"
+							size="lg"
+							onClick={() => {
+								const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491234567890';
+								const msg = encodeURIComponent(
+									`Hola! Ya realicé la transferencia por ${formatPrice(order.totalPrice, 2)} para la orden #${order.id.slice(0, 8).toUpperCase()}.`
+								);
+								window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, '_blank');
+							}}
+						>
+							<MessageCircle className="mr-2 h-5 w-5" />
+							Ya transferí, avisar por WhatsApp
+						</Button>
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Shipments Section */}
 			{order.shipments && order.shipments.length > 0 && (

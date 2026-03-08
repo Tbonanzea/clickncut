@@ -8,22 +8,20 @@ import {
 	type OrderItemInput,
 } from '@/app/(dashboard)/pricing/actions';
 
-interface SubmitQuoteResponse {
+interface SubmitOrderResponse {
 	orderId: string;
 	totalPrice: number;
 	message: string;
 }
 
 /**
- * Helper function to upload a file to S3
+ * Helper function to upload a file to Supabase Storage
  */
-async function uploadFileToS3(file: File, fileName: string): Promise<string> {
-	// Read file as base64
+async function uploadFileToStorage(file: File, fileName: string): Promise<string> {
 	const reader = new FileReader();
 	const fileContentPromise = new Promise<string>((resolve, reject) => {
 		reader.onload = () => {
 			const result = reader.result as string;
-			// Extract base64 content (remove data:mime;base64, prefix)
 			const base64Content = result.split(',')[1];
 			resolve(base64Content);
 		};
@@ -33,12 +31,9 @@ async function uploadFileToS3(file: File, fileName: string): Promise<string> {
 
 	const fileContent = await fileContentPromise;
 
-	// Upload to S3 via API route
 	const response = await fetch('/api/file', {
 		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
 			fileName,
 			fileContent,
@@ -51,20 +46,21 @@ async function uploadFileToS3(file: File, fileName: string): Promise<string> {
 		throw new Error(error.error || 'Failed to upload file');
 	}
 
-	// Return the storage path from server (includes userId prefix)
 	const result = await response.json();
 	return result.path;
 }
 
 /**
- * TanStack Query mutation hook for submitting quote
- * Handles file upload to S3 and order creation
+ * TanStack Query mutation hook for submitting an order.
+ * Creates the order with billing/shipping data, then handles payment:
+ * - MercadoPago: creates preference and redirects
+ * - Transfer: creates transfer record and redirects to pending page
  */
-export function useSubmitQuote() {
-	const { cart } = useQuoting();
+export function useSubmitOrder() {
+	const { cart, checkoutData } = useQuoting();
 	const router = useRouter();
 
-	return useMutation<SubmitQuoteResponse, Error, void>({
+	return useMutation<SubmitOrderResponse, Error, void>({
 		mutationFn: async () => {
 			// Validation
 			if (cart.items.length === 0) {
@@ -83,8 +79,11 @@ export function useSubmitQuote() {
 				throw new Error('Some cart items are incomplete');
 			}
 
-			// Step 1: Upload all files to Supabase Storage (only if they have _rawFile)
-			// The server adds the userId prefix to the path automatically
+			if (!checkoutData.paymentMethod) {
+				throw new Error('No payment method selected');
+			}
+
+			// Step 1: Upload all files to Supabase Storage
 			const uploadPromises = cart.items.map(async (item, idx) => {
 				if (item.file._rawFile) {
 					const timestamp = Date.now();
@@ -93,9 +92,7 @@ export function useSubmitQuote() {
 						'_'
 					);
 					const fileName = `${timestamp}-${idx}-${sanitizedFilename}`;
-
-					// Upload to Supabase Storage via API route (server adds userId prefix)
-					const storagePath = await uploadFileToS3(item.file._rawFile, fileName);
+					const storagePath = await uploadFileToStorage(item.file._rawFile, fileName);
 
 					return {
 						...item,
@@ -110,7 +107,7 @@ export function useSubmitQuote() {
 
 			const uploadedItems = await Promise.all(uploadPromises);
 
-			// Step 2: Compute order prices in a single call
+			// Step 2: Compute order prices server-side
 			const pricingItems: OrderItemInput[] = uploadedItems
 				.filter(
 					(item) =>
@@ -143,7 +140,6 @@ export function useSubmitQuote() {
 			}
 
 			// Step 3: Build order items
-			// Map from pricingItems index back to uploadedItems
 			let pricingIdx = 0;
 			const orderItems = uploadedItems.map((item) => {
 				let price = item.materialType!.pricePerUnit; // fallback
@@ -173,16 +169,31 @@ export function useSubmitQuote() {
 				};
 			});
 
-			// Call orders API
+			// Step 4: Create order with billing/shipping data
 			const response = await fetch('/api/orders', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					items: orderItems,
 					extras: cart.extras,
 					logisticsCost,
+					// Billing
+					invoiceType: checkoutData.invoiceType,
+					customerName:
+						checkoutData.invoiceType === 'CONSUMIDOR_FINAL'
+							? checkoutData.customerName
+							: checkoutData.businessName,
+					customerPhone: checkoutData.customerPhone,
+					dni: checkoutData.dni || undefined,
+					cuit: checkoutData.cuit || undefined,
+					businessName: checkoutData.businessName || undefined,
+					taxCondition: checkoutData.taxCondition || undefined,
+					// Shipping
+					shippingAddress: checkoutData.shippingAddress,
+					shippingCity: checkoutData.shippingCity,
+					shippingProvince: checkoutData.shippingProvince,
+					shippingZipCode: checkoutData.shippingZipCode,
+					shippingNotes: checkoutData.shippingNotes || undefined,
 				}),
 			});
 
@@ -191,21 +202,66 @@ export function useSubmitQuote() {
 				throw new Error(error.error || 'Failed to create order');
 			}
 
-			const data = await response.json();
+			const orderData = await response.json();
+			const orderId = orderData.orderId;
 
-			return {
-				orderId: data.orderId,
-				totalPrice: data.totalPrice,
-				message: data.message || 'Cotización enviada exitosamente',
-			};
+			// Step 5: Handle payment
+			if (checkoutData.paymentMethod === 'mercadopago') {
+				const paymentResponse = await fetch('/api/payments/create-preference', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ orderId }),
+				});
+
+				if (!paymentResponse.ok) {
+					const paymentError = await paymentResponse.json();
+					throw new Error(paymentError.error || 'Error al crear preferencia de pago');
+				}
+
+				const paymentData = await paymentResponse.json();
+				const redirectUrl = paymentData.sandbox_init_point || paymentData.init_point;
+
+				if (!redirectUrl) {
+					throw new Error('No se recibió URL de pago');
+				}
+
+				// Redirect to MercadoPago — this navigates away from the app
+				window.location.href = redirectUrl;
+
+				// Return data while redirect happens
+				return {
+					orderId,
+					totalPrice: orderData.totalPrice,
+					message: 'Redirigiendo a MercadoPago...',
+				};
+			} else {
+				// Bank transfer
+				const transferResponse = await fetch('/api/payments/create-transfer', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ orderId }),
+				});
+
+				if (!transferResponse.ok) {
+					const transferError = await transferResponse.json();
+					throw new Error(transferError.error || 'Error al registrar transferencia');
+				}
+
+				return {
+					orderId,
+					totalPrice: orderData.totalPrice,
+					message: 'Pedido registrado, pendiente de transferencia',
+				};
+			}
 		},
 		onSuccess: (data) => {
-			// Navigate outside /quoting/* so QuotingProvider unmounts and cart resets automatically
-			router.replace(`/quote-success?orderId=${data.orderId}`);
+			// Only redirect if not MercadoPago (MP redirect happens in mutationFn)
+			if (checkoutData.paymentMethod === 'transfer') {
+				router.replace(`/checkout/pending?orderId=${data.orderId}&amount=${data.totalPrice}`);
+			}
 		},
 		onError: (error) => {
-			console.error('Error submitting quote:', error);
-			// Error handling is done by the component using this hook
+			console.error('Error submitting order:', error);
 		},
 	});
 }
